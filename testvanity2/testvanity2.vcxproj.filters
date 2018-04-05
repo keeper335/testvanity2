@@ -24,6 +24,9 @@
     <ClCompile Include="utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="msecp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externs.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="b58.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msecp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
