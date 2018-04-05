@@ -1,12 +1,14 @@
 #pragma once
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <windows.h>
 
 /* include secp256k1 */
-#include "src/libsecp256k1-config.h"
+//#include "src/libsecp256k1-config.h"
 #include <secp256k1.c>
+#include "msecp.h"
 
 #include "b58.h"
 #include "utils.h"
