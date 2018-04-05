@@ -5,7 +5,7 @@
 #include <windows.h>
 
 /* include secp256k1 */
-#include "src/libsecp256k1-config.h"
+#include <libsecp256k1-config.h>
 #include <secp256k1.c>
 
 #include "b58.h"

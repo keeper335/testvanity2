@@ -12,7 +12,7 @@ uint64_t *thread_count;
 static void manager_loop(int threads, int sock);
 static void announce_result(int found, const uint8_t result[52]);
 DWORD WINAPI threadEngine(void *args_);
-
+hello
 static void announce_result(int found, const uint8_t result[52])
 {
 	uint8_t pub_block[RIPEMD160_DIGEST_LENGTH + 5] = { 0, }, checksum[SHA256_DIGEST_LENGTH], wif[35];
