@@ -4,12 +4,12 @@
 typedef struct {
 	uint64_t *thread_count;
 	int thread_num;
-	int sock;
+	SOCKET sock;
 	uint8_t **pattern_to_find;
 } thread_data_t;
 
 uint64_t *thread_count;
-static void manager_loop(int threads, int sock);
+static void manager_loop(int threads, SOCKET sock);
 static void announce_result(int found, const uint8_t result[52]);
 DWORD WINAPI threadEngine(void *args_);
 
@@ -53,26 +53,26 @@ static void announce_result(int found, const uint8_t result[52])
 
 int main(int argc, char *argv[])
 {
-	int i, status, sock[2];// ncpus=get_num_cpus(), threads=ncpus;
+	int i, status;
+	SOCKET sock[2];
 	thread_data_t *args[THREADS_NUM];
 	HANDLE  hThreadArray[THREADS_NUM];
 	uint8_t *pattern_to_find[ADDRESS_NUM];
-
-	SOCKET sock;
-
+	
+	WSADATA	wsadata;
+	WSAStartup(MAKEWORD(2, 2), &wsadata);
+	if (socketpair(AF_UNIX, SOCK_DGRAM, 0, (SOCKET *)sock)) {
+		printf("socketpair error\n");
+		goto error3;
+	}
 
 	for (i = 0;i < ADDRESS_NUM; i++) {
 		pattern_to_find[i] = (uint8_t*)malloc(sizeof(uint8_t) * 21);
 		if (!add_prefix2(adr_to_find[i], pattern_to_find[i])) {
-			goto error1;
+			goto error2;
 		}
 	}
-
-	if (socketpair(AF_UNIX, SOCK_DGRAM, 0, (SOCKET *)sock)) {
-		printf("socketpair error\n");
-		goto error1;
-	}
-
+	
 	thread_count = (uint64_t *)malloc(sizeof(uint64_t) * THREADS_NUM);
 
 	for (i = 0;i < THREADS_NUM;i++) {
@@ -92,15 +92,18 @@ int main(int argc, char *argv[])
 	printf("Exit\n");
 
 error1:
-	for (i = 0; i< ADDRESS_NUM;i++)
-		free(pattern_to_find[i]);
+	WSACleanup();
 	for (i = 0; i< THREADS_NUM;i++)
 		free(args[i]);
-
+	free(thread_count);
+error2:
+	for (i = 0; i< ADDRESS_NUM;i++)
+		free(pattern_to_find[i]);
+error3:
 	return 1;
 }
 
-static void manager_loop(int threads, int sock)
+static void manager_loop(int threads, SOCKET sock)
 {
 
 	fd_set readset;
@@ -187,7 +190,8 @@ DWORD WINAPI threadEngine(void *args_)
 	secp256k1_gej temp;
 	secp256k1_ge offset;
 	int thread = args->thread_num;
-	uint8_t *pattern_to_find[ADDRESS_NUM] = args->pattern_to_find;
+	uint8_t **pattern_to_find;
+	pattern_to_find = args->pattern_to_find;
 
 	uint8_t sha_block[SHA256_DIGEST_LENGTH + 1], rmd_block[SHA256_DIGEST_LENGTH], result[52], *pubkey = result + 32;
 	uint64_t *key = (uint64_t *)result;
@@ -243,7 +247,7 @@ rekey:
 					printf("\n");
 
 					if (send(args->sock, result, 52, 0) != 52)
-						return NULL;
+						return 1;
 					//goto rekey;
 				}
 			}
@@ -255,5 +259,5 @@ rekey:
 			goto rekey;
 		}
 	}
-	return NULL;
+	return 1;
 }

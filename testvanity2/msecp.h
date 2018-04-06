@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "secp256k1/src/hash.h"
+//#include "secp256k1/src/hash.h"
 
 #define SECP256K1_CONTEXT_VERIFY (1 << 0)
 #define SECP256K1_CONTEXT_SIGN   (1 << 1)
@@ -29,11 +29,11 @@
 #define WINDOW_A 5
 #define WINDOW_G 16
 #define ECMULT_TABLE_SIZE(w) (1 << ((w)-2))
-
+#define checked_malloc(x,y) malloc(y)
 
 
 typedef struct {
-	uint64_t d[4];
+	uint32_t d[8];
 } secp256k1_scalar;
 
 typedef struct {
@@ -96,9 +96,17 @@ static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
 );
 
 secp256k1_context* secp256k1_context_create(unsigned int flags);
+void secp256k1_context_destroy(secp256k1_context* ctx);
 
 /* ecmult h */
 void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx);
+void secp256k1_context_destroy(secp256k1_context* ctx);
+void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx);
+int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx);
+void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256k1_callback *cb);
+void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst, const secp256k1_ecmult_context *src, const secp256k1_callback *cb);
+int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, int w);
+void secp256k1_ecmult(const secp256k1_ecmult_context *ctx, secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_scalar *na, const secp256k1_scalar *ng);
 
 
 /* ecmult gen h */
@@ -133,14 +141,18 @@ void inline secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag);
 void inline secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag);
 void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe *a);
 void inline secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storage *a);
-
+int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b);
+int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a);
+void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a);
+void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a);
+void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a);
 /* group h */
 
-static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi);
-static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y);
-static int secp256k1_ge_is_infinity(const secp256k1_ge *a);
-static void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a);
-static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a);
+void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi);
+void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y);
+int secp256k1_ge_is_infinity(const secp256k1_ge *a);
+void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a);
+void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a);
 void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a);
 void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_callback *cb);
 void secp256k1_ge_set_table_gej_var(size_t len, secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zr);

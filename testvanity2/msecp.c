@@ -1,3 +1,5 @@
+#include <memory.h>
+#include <stdlib.h>
 #include "msecp.h"
 
 static void default_illegal_callback_fn(const char* str, void* data) {
@@ -25,8 +27,16 @@ static const secp256k1_callback default_error_callback = {
 void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx) {
 	ctx->pre_g = NULL;
 }
+void secp256k1_context_destroy(secp256k1_context* ctx) {
+	if (ctx != NULL) {
+		secp256k1_ecmult_context_clear(&ctx->ecmult_ctx);
+		secp256k1_ecmult_gen_context_clear(&ctx->ecmult_gen_ctx);
 
-static void secp256k1_ecmult_odd_multiples_table(int n, secp256k1_gej *prej, secp256k1_fe *zr, const secp256k1_gej *a) {
+		free(ctx);
+	}
+}
+
+void secp256k1_ecmult_odd_multiples_table(int n, secp256k1_gej *prej, secp256k1_fe *zr, const secp256k1_gej *a) {
 	secp256k1_gej d;
 	secp256k1_ge a_ge, d_ge;
 	int i;
@@ -47,14 +57,14 @@ static void secp256k1_ecmult_odd_multiples_table(int n, secp256k1_gej *prej, sec
 	secp256k1_fe_mul(&prej[n - 1].z, &prej[n - 1].z, &d.z);
 }
 
-static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge *pre, secp256k1_fe *globalz, const secp256k1_gej *a) {
+void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge *pre, secp256k1_fe *globalz, const secp256k1_gej *a) {
 	secp256k1_gej prej[ECMULT_TABLE_SIZE(WINDOW_A)];
 	secp256k1_fe zr[ECMULT_TABLE_SIZE(WINDOW_A)];
 	secp256k1_ecmult_odd_multiples_table(ECMULT_TABLE_SIZE(WINDOW_A), prej, zr, a);
 	secp256k1_ge_globalz_set_table_gej(ECMULT_TABLE_SIZE(WINDOW_A), pre, globalz, prej, zr);
 }
 
-static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage *pre, const secp256k1_gej *a, const secp256k1_callback *cb) {
+void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage *pre, const secp256k1_gej *a, const secp256k1_callback *cb) {
 	secp256k1_gej *prej = (secp256k1_gej*)checked_malloc(cb, sizeof(secp256k1_gej) * n);
 	secp256k1_ge *prea = (secp256k1_ge*)checked_malloc(cb, sizeof(secp256k1_ge) * n);
 	secp256k1_fe *zr = (secp256k1_fe*)checked_malloc(cb, sizeof(secp256k1_fe) * n);
@@ -78,8 +88,7 @@ void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256
 	secp256k1_ecmult_odd_multiples_table_storage_var(ECMULT_TABLE_SIZE(WINDOW_G), *ctx->pre_g, &gj, cb);
 }
 
-static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
-	const secp256k1_ecmult_context *src, const secp256k1_callback *cb) {
+void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst, const secp256k1_ecmult_context *src, const secp256k1_callback *cb) {
 	if (src->pre_g == NULL) {
 		dst->pre_g = NULL;
 	}
@@ -90,11 +99,11 @@ static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
 	}
 }
 
-static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx) {
+int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx) {
 	return ctx->pre_g != NULL;
 }
 
-static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx) {
+void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx) {
 	free(ctx->pre_g);
 	secp256k1_ecmult_context_init(ctx);
 }
@@ -277,7 +286,7 @@ void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigne
 	secp256k1_gej gb;
 	secp256k1_fe s;
 	unsigned char nonce32[32];
-	secp256k1_rfc6979_hmac_sha256_t rng;
+	//secp256k1_rfc6979_hmac_sha256_t rng;
 	int retry;
 	unsigned char keydata[64] = { 0 };
 	if (seed32 == NULL) {
@@ -291,11 +300,12 @@ void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigne
 	if (seed32 != NULL) {
 		memcpy(keydata + 32, seed32, 32);
 	}
-	secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, seed32 ? 64 : 32);
+	//secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, seed32 ? 64 : 32);
+	//TODO
 	memset(keydata, 0, sizeof(keydata));
 	/* Retry for out of range results to achieve uniformity. */
 	do {
-		secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+		//secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
 		retry = !secp256k1_fe_set_b32(&s, nonce32);
 		retry |= secp256k1_fe_is_zero(&s);
 	} while (retry);
@@ -303,12 +313,12 @@ void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigne
 	secp256k1_gej_rescale(&ctx->initial, &s);
 	secp256k1_fe_clear(&s);
 	do {
-		secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+		//secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
 		secp256k1_scalar_set_b32(&b, nonce32, &retry);
 		/* A blinding value of 0 works, but would undermine the projection hardening. */
 		retry |= secp256k1_scalar_is_zero(&b);
 	} while (retry);
-	secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+	//secp256k1_rfc6979_hmac_sha256_finalize(&rng);
 	memset(nonce32, 0, 32);
 	secp256k1_ecmult_gen(ctx, &gb, &b);
 	secp256k1_scalar_negate(&b, &b);
@@ -317,7 +327,6 @@ void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigne
 	secp256k1_scalar_clear(&b);
 	secp256k1_gej_clear(&gb);
 }
-
 
 secp256k1_context* secp256k1_context_create(unsigned int flags) {
 	secp256k1_context* ret = (secp256k1_context*)malloc(sizeof(secp256k1_context));
@@ -526,11 +535,13 @@ void inline secp256k1_fe_add(secp256k1_fe *r, const secp256k1_fe *a) {
 }
 
 void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe *b) {
-	secp256k1_fe_mul_inner(r->n, a->n, b->n);
+	//secp256k1_fe_mul_inner(r->n, a->n, b->n);
+	//TODO
 }
 
 void secp256k1_fe_sqr(secp256k1_fe *r, const secp256k1_fe *a) {
-	secp256k1_fe_sqr_inner(r->n, a->n);
+	//secp256k1_fe_sqr_inner(r->n, a->n);
+	//TODO
 }
 
 void inline secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_fe *a, int flag) {
@@ -569,9 +580,128 @@ void inline secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storag
 	r->n[4] = a->n[3] >> 16;
 }
 
+int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b) {
+	secp256k1_fe na;
+	secp256k1_fe_negate(&na, a, 1);
+	secp256k1_fe_add(&na, b);
+	return secp256k1_fe_normalizes_to_zero_var(&na);
+}
+
+
+int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a) {
+	secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+	int j;
+	secp256k1_fe_sqr(&x2, a);
+	secp256k1_fe_mul(&x2, &x2, a);
+	secp256k1_fe_sqr(&x3, &x2);
+	secp256k1_fe_mul(&x3, &x3, a);
+	x6 = x3;
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+	secp256k1_fe_mul(&x6, &x6, &x3);
+	x9 = x6;
+	for (j = 0; j<3; j++)secp256k1_fe_sqr(&x9, &x9);
+	secp256k1_fe_mul(&x9, &x9, &x3);
+	x11 = x9;
+	for (j = 0; j<2; j++)secp256k1_fe_sqr(&x11, &x11);
+	secp256k1_fe_mul(&x11, &x11, &x2);
+	x22 = x11;
+	for (j = 0; j<11; j++)secp256k1_fe_sqr(&x22, &x22);
+	secp256k1_fe_mul(&x22, &x22, &x11);
+	x44 = x22;
+	for (j = 0; j<22; j++)secp256k1_fe_sqr(&x44, &x44);
+	secp256k1_fe_mul(&x44, &x44, &x22);
+	x88 = x44;
+	for (j = 0; j<44; j++)secp256k1_fe_sqr(&x88, &x88);
+	secp256k1_fe_mul(&x88, &x88, &x44);
+	x176 = x88;
+	for (j = 0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+	secp256k1_fe_mul(&x176, &x176, &x88);
+	x220 = x176;
+	for (j = 0; j<44; j++) secp256k1_fe_sqr(&x220, &x220);
+	secp256k1_fe_mul(&x220, &x220, &x44);
+	x223 = x220;
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+	secp256k1_fe_mul(&x223, &x223, &x3);
+	t1 = x223;
+	for (j = 0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(&t1, &t1, &x22);
+	for (j = 0; j<6; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(&t1, &t1, &x2);
+	secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_sqr(r, &t1);
+	secp256k1_fe_sqr(&t1, r);
+	return secp256k1_fe_equal_var(&t1, a);
+}
+
+void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
+	secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+	int j;
+	secp256k1_fe_sqr(&x2, a);
+	secp256k1_fe_mul(&x2, &x2, a);
+	secp256k1_fe_sqr(&x3, &x2);
+	secp256k1_fe_mul(&x3, &x3, a);
+	x6 = x3;
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+	secp256k1_fe_mul(&x6, &x6, &x3);
+	x9 = x6;
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&x9, &x9);
+	secp256k1_fe_mul(&x9, &x9, &x3);
+	x11 = x9;
+	for (j = 0; j<2; j++) secp256k1_fe_sqr(&x11, &x11);
+	secp256k1_fe_mul(&x11, &x11, &x2);
+	x22 = x11;
+	for (j = 0; j<11; j++) secp256k1_fe_sqr(&x22, &x22);
+	secp256k1_fe_mul(&x22, &x22, &x11);
+	x44 = x22;
+	for (j = 0; j<22; j++) secp256k1_fe_sqr(&x44, &x44);
+	secp256k1_fe_mul(&x44, &x44, &x22);
+	x88 = x44;
+	for (j = 0; j<44; j++) secp256k1_fe_sqr(&x88, &x88);
+	secp256k1_fe_mul(&x88, &x88, &x44);
+	x176 = x88;
+	for (j = 0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+	secp256k1_fe_mul(&x176, &x176, &x88);
+	x220 = x176;
+	for (j = 0; j<44; j++) 	secp256k1_fe_sqr(&x220, &x220);
+	secp256k1_fe_mul(&x220, &x220, &x44);
+	x223 = x220;
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+	secp256k1_fe_mul(&x223, &x223, &x3);
+	t1 = x223;
+	for (j = 0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(&t1, &t1, &x22);
+	for (j = 0; j<5; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(&t1, &t1, a);
+	for (j = 0; j<3; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(&t1, &t1, &x2);
+	for (j = 0; j<2; j++) secp256k1_fe_sqr(&t1, &t1);
+	secp256k1_fe_mul(r, a, &t1);
+}
+
+void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
+	secp256k1_fe_inv(r, a);
+}
+
+void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a) {
+	secp256k1_fe u;
+	size_t i;
+	if (len < 1) return;
+	VERIFY_CHECK((r + len <= a) || (a + len <= r));
+	r[0] = a[0];
+	i = 0;
+	while (++i < len) secp256k1_fe_mul(&r[i], &r[i - 1], &a[i]);
+	secp256k1_fe_inv_var(&u, &r[--i]);
+	while (i > 0) {
+		size_t j = i--;
+		secp256k1_fe_mul(&r[j], &r[i], &u);
+		secp256k1_fe_mul(&u, &u, &a[j]);
+	}
+	r[0] = u;
+}
+
 /* group h */
 
-static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
+void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
 	secp256k1_fe zi2;
 	secp256k1_fe zi3;
 	secp256k1_fe_sqr(&zi2, zi);
@@ -581,23 +711,23 @@ static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, c
 	r->infinity = a->infinity;
 }
 
-static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y) {
+void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y) {
 	r->infinity = 0;
 	r->x = *x;
 	r->y = *y;
 }
 
-static int secp256k1_ge_is_infinity(const secp256k1_ge *a) {
+int secp256k1_ge_is_infinity(const secp256k1_ge *a) {
 	return a->infinity;
 }
 
-static void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a) {
+void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a) {
 	*r = *a;
 	secp256k1_fe_normalize_weak(&r->y);
 	secp256k1_fe_negate(&r->y, &r->y, 1);
 }
 
-static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a) {
+void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a) {
 	secp256k1_fe z2, z3;
 	r->infinity = a->infinity;
 	secp256k1_fe_inv(&a->z, &a->z);
@@ -1115,7 +1245,7 @@ int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, const s
 	r->d[6] = t & 0xFFFFFFFFULL; t >>= 32;
 	t += (uint64_t)a->d[7] + b->d[7];
 	r->d[7] = t & 0xFFFFFFFFULL; t >>= 32;
-	overflow = t + secp256k1_scalar_check_overflow(r);
+	overflow = (int)t + secp256k1_scalar_check_overflow(r);
 	VERIFY_CHECK(overflow == 0 || overflow == 1);
 	secp256k1_scalar_reduce(r, overflow);
 	return overflow;

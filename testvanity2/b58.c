@@ -20,13 +20,14 @@
 * IN THE SOFTWARE.
 */
 
-#include "externs.h"
+//#include "externs.h"
+#include <stdint.h>
+#include <string.h>
+#include <memory.h>
+#include "b58.h"
 
 #define B58_IN_SIZE 25
 #define B58_OUT_SIZE (B58_IN_SIZE + 3)/4
-
-
-
 static const int8_t b58digits_map[] = {
 	-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
@@ -125,7 +126,7 @@ int b58enc(char *b58, const void *data, size_t binsz)
 	const uint8_t *bin = data;
 	uint8_t buf[B58_ENC_SIZE];
 	int carry;
-	int i, j, high, zcount = 0;
+	unsigned int i, j, high, zcount = 0;
 	size_t size;
 
 	while (zcount < binsz && !bin[zcount])

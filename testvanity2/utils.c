@@ -1,4 +1,7 @@
-#include "externs.h"
+//#include "externs.h"
+#include "utils.h"
+#include "b58.h"
+
 /**** libsecp256k1 Overrides *************************************************/
 
 void my_secp256k1_fe_inv_all_gej_var(secp256k1_fe *r,
@@ -143,9 +146,7 @@ int add_prefix2(const char *prefix, uint8_t *pattern)
 	return 1;
 }
 
-#ifndef socketpair
-#define PORT 19214
-int socketpair(_In_ int af, _In_ int type, _In_ int protocol, SOCKET *pair) {
+int socketpair(int af, int type, int protocol, SOCKET *pair) {
 	struct sockaddr_in s0, s1;
 	int af_ = AF_INET;
 	if ((pair[0] = socket(af_, type, 0)) == INVALID_SOCKET)
@@ -173,4 +174,3 @@ int socketpair(_In_ int af, _In_ int type, _In_ int protocol, SOCKET *pair) {
 	}
 	return 0;
 }
-#endif
