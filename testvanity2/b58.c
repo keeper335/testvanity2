@@ -20,10 +20,6 @@
 * IN THE SOFTWARE.
 */
 
-//#include "externs.h"
-#include <stdint.h>
-#include <string.h>
-#include <memory.h>
 #include "b58.h"
 
 #define B58_IN_SIZE 25

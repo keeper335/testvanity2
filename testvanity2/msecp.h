@@ -33,7 +33,7 @@
 
 
 typedef struct {
-	uint32_t d[8];
+	uint64_t d[4];
 } secp256k1_scalar;
 
 typedef struct {
@@ -100,7 +100,7 @@ void secp256k1_context_destroy(secp256k1_context* ctx);
 
 /* ecmult h */
 void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx);
-void secp256k1_context_destroy(secp256k1_context* ctx);
+
 void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx);
 int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx);
 void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256k1_callback *cb);

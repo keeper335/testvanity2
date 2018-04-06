@@ -1,16 +1,5 @@
 #pragma once
-
-#define _CRT_SECURE_NO_WARNINGS
-#define STEP 3072
-#define SHA256_DIGEST_LENGTH 32
-#define RIPEMD160_DIGEST_LENGTH 20
-
-#define SHA256(x,y,z) snprintf(z,y,"%s",x)
-#define RIPEMD160(x,y,z) snprintf(z,y,"%s",x)
-#define NELEM(array) (int)(sizeof(array)/sizeof(array[0]))
-#include <windows.h>
-#include "msecp.h"
-
+#include "externs.h"
 void my_secp256k1_ge_set_all_gej_var(secp256k1_ge *r,
 	const secp256k1_gej *a);
 void my_secp256k1_gej_add_ge_var(secp256k1_gej *r,

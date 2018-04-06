@@ -1,6 +1,4 @@
-//#include "externs.h"
 #include "utils.h"
-#include "b58.h"
 
 /**** libsecp256k1 Overrides *************************************************/
 

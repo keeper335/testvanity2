@@ -1,5 +1,3 @@
-#include <memory.h>
-#include <stdlib.h>
 #include "msecp.h"
 
 static void default_illegal_callback_fn(const char* str, void* data) {
