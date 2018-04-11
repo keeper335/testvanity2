@@ -3,12 +3,6 @@
 #define iter_64(a) do {int _i; for (_i = 0; _i < 64; _i++) { a(_i) }} while (0)
 
 
-static inline double powe (double x, int y) {
-	int _i;
-	double x2;
-	for (_i=y;_i>0;_i--){x2*=x;}
-	return x2;
-}
 
 __kernel void hello_kernel() {
   // Get the index of the current element to be processed

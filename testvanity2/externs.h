@@ -14,8 +14,8 @@
 
 /* include secp256k1 */
 //#include "src/libsecp256k1-config.h"
-//#include <secp256k1.c>
-#include "secp256_ext.h"
+#include <secp256k1.c>
+//#include "secp256_ext.h"
 
 #include "b58.h"
 #include "utils.h"
