@@ -1,58 +1,9 @@
 #pragma once
-#define USE_ECMULT_STATIC_PRECOMPUTATION 1
-#ifndef NULL
-//#define NULL ((void *)0)
-#define NULL 0
-#endif
-
-typedef unsigned long long uint64_t;
-typedef unsigned long uint32_t;
-typedef unsigned int uint16_t;
-typedef unsigned int size_t;
-typedef int ssize_t;
-typedef long long int64_t;
-typedef long int32_t;
-typedef int int16_t;
-typedef unsigned char uint8_t;
-typedef struct { uint64_t n[5]; } secp256k1_fe;
-typedef struct { uint64_t n[4]; } secp256k1_fe_storage;
-typedef struct { uint64_t d[4]; } secp256k1_scalar;
-typedef uint64_t uint128_t;
-typedef int64_t int128_t;
-
-typedef struct {
-	secp256k1_fe x;
-	secp256k1_fe y;
-	int infinity; /* whether this represents the point at infinity */
-} secp256k1_ge;
-
-typedef struct {
-	secp256k1_fe x; /* actual X: x/z^2 */
-	secp256k1_fe y; /* actual Y: y/z^3 */
-	secp256k1_fe z;
-	int infinity; /* whether this represents the point at infinity */
-} secp256k1_gej;
-
-typedef struct {
-	secp256k1_fe_storage x;
-	secp256k1_fe_storage y;
-} secp256k1_ge_storage;
-
-typedef struct {
-	secp256k1_ge_storage(*prec)[64][16]; /* prec[j][i] = 16^j * i * G + U_i */
-	secp256k1_scalar blind;
-	secp256k1_gej initial;
-} secp256k1_ecmult_gen_context;
-
-#define SECP256K1_FE_CONST_INNER(d7, d6, d5, d4, d3, d2, d1, d0) { \
-    (d0) | (((uint64_t)(d1) & 0xFFFFFUL) << 32), \
-    ((uint64_t)(d1) >> 20) | (((uint64_t)(d2)) << 12) | (((uint64_t)(d3) & 0xFFUL) << 44), \
-    ((uint64_t)(d3) >> 8) | (((uint64_t)(d4) & 0xFFFFFFFUL) << 24), \
-    ((uint64_t)(d4) >> 28) | (((uint64_t)(d5)) << 4) | (((uint64_t)(d6) & 0xFFFFUL) << 36), \
-    ((uint64_t)(d6) >> 16) | (((uint64_t)(d7)) << 16) \
-}
-#define SECP256K1_FE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {SECP256K1_FE_CONST_INNER((d7), (d6), (d5), (d4), (d3), (d2), (d1), (d0))}
-#define SECP256K1_GE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), 0}
+#include "secp_static_ctx.c"
+#include "secp_hash.c"
+#include "secp_field.c"
+#include "secp_group.c"
+#include "secp_scalar.c"
 
 #define SECP256K1_FE_STORAGE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{ \
     (d0) | (((uint64_t)(d1)) << 32), \
@@ -65,7 +16,7 @@ typedef struct {
 
 
 #define SC SECP256K1_GE_STORAGE_CONST
-static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
+__constant static secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
 	{
 		SC(983487347u, 1861041900u, 2599115456u, 565528146u, 1451326239u, 148794576u, 4224640328u, 3120843701u, 2076989736u, 3184115747u, 3754320824u, 2656004457u, 2876577688u, 2388659905u, 3527541004u, 1170708298u),
 		SC(3830281845u, 3284871255u, 1309883393u, 2806991612u, 1558611192u, 1249416977u, 1614773327u, 1353445208u, 633124399u, 4264439010u, 426432620u, 167800352u, 2355417627u, 2991792291u, 3042397084u, 505150283u),
@@ -1221,18 +1172,90 @@ static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
 };
 #undef SC
 
-void memcpy(void* dst, void const* src, size_t size)
-{
-	size_t ret = 0;
-	char *i_dst = (char *)dst;
-	for (; ret <= size; ret++)
-		i_dst[ret] = ((char *)src)[ret];
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx);
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx);
+
+static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
+	ctx->prec = NULL;
+	secp256k1_ecmult_gen_context_build(ctx);
 }
 
-void memset(void* dst, int byte, size_t size)
-{
-	size_t ret = 0;
-	int *i_dst = (int *)dst;
-	for (; ret <= size; ret++)
-		i_dst[ret] = byte;
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
+	if (ctx->prec != NULL) {
+		return;
+	}
+	ctx->prec = (secp256k1_ge_storage(*)[64][16])secp256k1_ecmult_static_context;
+	secp256k1_ecmult_gen_blind(ctx);
+}
+
+static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
+	secp256k1_ge add;
+	secp256k1_ge_storage adds;
+	secp256k1_scalar gnb;
+	int bits;
+	int i, j;
+	memset(&adds, 0, sizeof(adds));
+	*r = ctx->initial;
+	/* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */
+	secp256k1_scalar_add(&gnb, gn, &ctx->blind);
+	add.infinity = 0;
+	for (j = 0; j < 64; j++) {
+		bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
+		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
+		secp256k1_ge_from_storage(&add, &adds);
+		secp256k1_gej_add_ge(r, r, &add);
+	}
+	bits = 0;
+	secp256k1_ge_clear(&add);
+	secp256k1_scalar_clear(&gnb);
+}
+
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx) {
+	secp256k1_scalar b;
+	secp256k1_gej gb;
+	secp256k1_fe s;
+	unsigned char nonce32[32];
+	secp256k1_rfc6979_hmac_sha256_t rng;
+	int retry;
+	unsigned char keydata[64] = { 0 };
+
+	/* When seed is NULL, reset the initial point and blinding value. */
+	//TODO maybe need to alloc?
+	secp256k1_gej_set_initial(&ctx->initial);
+	secp256k1_gej_neg(&ctx->initial, &ctx->initial);
+	secp256k1_scalar_set_int(&ctx->blind, 1);
+
+	/* The prior blinding value (if not reset) is chained forward by including it in the hash. */
+	secp256k1_scalar_get_b32(nonce32, &ctx->blind);
+	/** Using a CSPRNG allows a failure free interface, avoids needing large amounts of random data,
+	*   and guards against weak or adversarial seeds.  This is a simpler and safer interface than
+	*   asking the caller for blinding values directly and expecting them to retry on failure.
+	*/
+	memcpy(keydata, nonce32, 32);
+
+	secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, 32);
+	memset(keydata, 0, sizeof(keydata));
+	/* Retry for out of range results to achieve uniformity. */
+	do {
+		secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+		retry = !secp256k1_fe_set_b32(&s, nonce32);
+		retry |= secp256k1_fe_is_zero(&s);
+	} while (retry);
+	/* Randomize the projection to defend against multiplier sidechannels. */
+	secp256k1_gej_rescale(&ctx->initial, &s);
+	secp256k1_fe_clear(&s);
+	do {
+		secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+		secp256k1_scalar_set_b32(&b, nonce32, &retry);
+		/* A blinding value of 0 works, but would undermine the projection hardening. */
+		retry |= secp256k1_scalar_is_zero(&b);
+	} while (retry);
+	secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+	memset(nonce32, 0, 32);
+	secp256k1_ecmult_gen(ctx, &gb, &b);
+	secp256k1_scalar_negate(&b, &b);
+	ctx->blind = b;
+	ctx->initial = gb;
+	secp256k1_scalar_clear(&b);
+	secp256k1_gej_clear(&gb);
 }

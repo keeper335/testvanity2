@@ -1,5 +1,17 @@
 #include "secp_static_ctx.c"
-#include "secp_field.c"
+
+#define SECP256K1_FE_CONST_INNER(d7, d6, d5, d4, d3, d2, d1, d0) { \
+    (d0) | (((uint64_t)(d1) & 0xFFFFFUL) << 32), \
+    ((uint64_t)(d1) >> 20) | (((uint64_t)(d2)) << 12) | (((uint64_t)(d3) & 0xFFUL) << 44), \
+    ((uint64_t)(d3) >> 8) | (((uint64_t)(d4) & 0xFFFFFFFUL) << 24), \
+    ((uint64_t)(d4) >> 28) | (((uint64_t)(d5)) << 4) | (((uint64_t)(d6) & 0xFFFFUL) << 36), \
+    ((uint64_t)(d6) >> 16) | (((uint64_t)(d7)) << 16) \
+}
+#define SECP256K1_FE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {SECP256K1_FE_CONST_INNER((d7), (d6), (d5), (d4), (d3), (d2), (d1), (d0))}
+#define SECP256K1_GE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), 0}
+
+
+__constant static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL, 0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL, 0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL, 0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL);
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {
 	r->infinity = 0;
@@ -18,6 +30,14 @@ static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a) {
 	r->infinity = a->infinity;
 	r->x = a->x;
 	r->y = a->y;
+	secp256k1_fe_set_int(&r->z, 1);
+}
+
+static void secp256k1_gej_set_initial(secp256k1_gej *r) {
+	const secp256k1_ge a = secp256k1_ge_const_g;
+	r->infinity = a.infinity;
+	memcpy(&r->x, &a.x, sizeof(a.x));
+	memcpy(&r->y, &a.y, sizeof(a.y));
 	secp256k1_fe_set_int(&r->z, 1);
 }
 
@@ -85,7 +105,7 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, c
 
 static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b) {
 	/* Operations: 7 mul, 5 sqr, 4 normalize, 21 mul_int/add/negate/cmov */
-	static const secp256k1_fe fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
+	const secp256k1_fe fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
 	secp256k1_fe zz, u1, u2, s1, s2, t, tt, m, n, q, rr;
 	secp256k1_fe m_alt, rr_alt;
 	int infinity, degenerate;

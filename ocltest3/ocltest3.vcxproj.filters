@@ -29,27 +29,27 @@
     <ClCompile Include="ocltest3.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp_field.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp_group.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp_hash.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp_scalar.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="..\x64\Debug\secp_static_ctx.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Debug\HelloKernel.cl">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp.c">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp_field.c">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp_group.c">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp_hash.c">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp_scalar.c">
-      <Filter>Исходные файлы</Filter>
-    </None>
-    <None Include="secp_static_ctx.c">
       <Filter>Исходные файлы</Filter>
     </None>
   </ItemGroup>
