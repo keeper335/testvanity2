@@ -38,19 +38,19 @@
     <ClCompile Include="..\x64\Debug\secp_group.c">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
-    <ClCompile Include="..\x64\Debug\secp_hash.c">
-      <Filter>Файлы ресурсов</Filter>
-    </ClCompile>
     <ClCompile Include="..\x64\Debug\secp_scalar.c">
-      <Filter>Файлы ресурсов</Filter>
-    </ClCompile>
-    <ClCompile Include="..\x64\Debug\secp_static_ctx.c">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Debug\HelloKernel.cl">
       <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="..\x64\Debug\secp_static_ctx.c">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="..\x64\Debug\secp_hash.c">
+      <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>
 </Project>

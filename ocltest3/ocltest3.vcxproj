@@ -161,12 +161,24 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\x64\Debug\secp.c" />
-    <ClCompile Include="..\x64\Debug\secp_field.c" />
-    <ClCompile Include="..\x64\Debug\secp_group.c" />
-    <ClCompile Include="..\x64\Debug\secp_hash.c" />
-    <ClCompile Include="..\x64\Debug\secp_scalar.c" />
-    <ClCompile Include="..\x64\Debug\secp_static_ctx.c" />
+    <None Include="..\x64\Debug\secp.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="..\x64\Debug\secp_field.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="..\x64\Debug\secp_group.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="..\x64\Debug\secp_hash.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="..\x64\Debug\secp_scalar.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="..\x64\Debug\secp_static_ctx.c">
+      <FileType>CppCode</FileType>
+    </None>
     <ClCompile Include="ocltest3.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
