@@ -5,6 +5,14 @@
 #define NULL 0
 #endif
 
+#ifndef __constant
+#define __constant
+#endif
+#ifndef __global
+#define __global
+#endif
+
+#ifndef _STDINT
 typedef unsigned char      uint8_t;
 typedef unsigned short     uint16_t;
 typedef unsigned int       uint32_t;
@@ -13,6 +21,7 @@ typedef long  int64_t;
 typedef int   int32_t;
 typedef short int16_t;
 typedef char  int8_t;
+#endif
 
 typedef struct { uint32_t n[10]; } secp256k1_fe;
 typedef struct { uint32_t n[8]; } secp256k1_fe_storage;
@@ -44,9 +53,7 @@ typedef struct {
 	secp256k1_gej initial;
 } secp256k1_ecmult_gen_context;
 
-#define SECP256K1_FE_STORAGE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{ (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
-#define SECP256K1_FE_STORAGE_CONST_GET(d) d.n[7], d.n[6], d.n[5], d.n[4],d.n[3], d.n[2], d.n[1], d.n[0]
-
+#ifndef _VCRUNTIME_H
 void memcpy(void* dst, void const* src, size_t size)
 {
 	size_t ret = 0;
@@ -62,3 +69,4 @@ void memset(void* dst, int byte, size_t size)
 	for (; ret <= size; ret++)
 		i_dst[ret] = byte;
 }
+#endif

@@ -161,24 +161,24 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\x64\Debug\secp.c">
+    <ClInclude Include="..\x64\Debug\secp.c">
       <FileType>CppCode</FileType>
-    </None>
-    <None Include="..\x64\Debug\secp_field.c">
+    </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_field.c">
       <FileType>CppCode</FileType>
-    </None>
-    <None Include="..\x64\Debug\secp_group.c">
+    </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_group.c">
       <FileType>CppCode</FileType>
-    </None>
-    <None Include="..\x64\Debug\secp_hash.c">
+    </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_hash.c">
       <FileType>CppCode</FileType>
-    </None>
-    <None Include="..\x64\Debug\secp_scalar.c">
+    </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_scalar.c">
       <FileType>CppCode</FileType>
-    </None>
-    <None Include="..\x64\Debug\secp_static_ctx.c">
+    </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_static_ctx.c">
       <FileType>CppCode</FileType>
-    </None>
+    </ClInclude>
     <ClCompile Include="ocltest3.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

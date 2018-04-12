@@ -8,6 +8,10 @@
 __kernel void hello_kernel() {
   // Get the index of the current element to be processed
     int i = get_global_id(0), j;
+
+	//secp256k1_ecmult_gen_context sec_ctx;
+	//secp256k1_ecmult_gen_context_init(&sec_ctx);
+	//secp256k1_ecmult_gen_context_build(&sec_ctx);
   
 	float f1=0,f2=1,f3=1;
 	for (j=0; j<1000; j++) {

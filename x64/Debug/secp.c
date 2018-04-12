@@ -1,4 +1,5 @@
 #pragma once
+
 #include "secp_static_ctx.c"
 #include "secp_hash.c"
 #include "secp_field.c"
@@ -16,7 +17,7 @@
 
 
 #define SC SECP256K1_GE_STORAGE_CONST
-__constant static secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
+__constant secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
 	{
 		SC(983487347u, 1861041900u, 2599115456u, 565528146u, 1451326239u, 148794576u, 4224640328u, 3120843701u, 2076989736u, 3184115747u, 3754320824u, 2656004457u, 2876577688u, 2388659905u, 3527541004u, 1170708298u),
 		SC(3830281845u, 3284871255u, 1309883393u, 2806991612u, 1558611192u, 1249416977u, 1614773327u, 1353445208u, 633124399u, 4264439010u, 426432620u, 167800352u, 2355417627u, 2991792291u, 3042397084u, 505150283u),
@@ -1172,15 +1173,15 @@ __constant static secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] =
 };
 #undef SC
 
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx);
-static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx);
+void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx);
+void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx);
 
-static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
+void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
 	ctx->prec = NULL;
 	secp256k1_ecmult_gen_context_build(ctx);
 }
 
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
+void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
 	if (ctx->prec != NULL) {
 		return;
 	}
@@ -1188,7 +1189,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
 	secp256k1_ecmult_gen_blind(ctx);
 }
 
-static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
+void secp256k1_ecmult_gen(secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, secp256k1_scalar *gn) {
 	secp256k1_ge add;
 	secp256k1_ge_storage adds;
 	secp256k1_scalar gnb;
@@ -1210,7 +1211,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
 	secp256k1_scalar_clear(&gnb);
 }
 
-static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx) {
+void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx) {
 	secp256k1_scalar b;
 	secp256k1_gej gb;
 	secp256k1_fe s;
