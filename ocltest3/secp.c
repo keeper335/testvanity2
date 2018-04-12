@@ -1,5 +1,5 @@
 #pragma once
-//#include "static_ctx.c"
+//#include "static_ctx.cl"
 #include "secp_hash.c"
 #include "secp_scalar.c"
 #include "secp_group.c"
@@ -24,10 +24,32 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
 		return;
 	}
 	ctx->prec = (secp256k1_ge_storage(*)[64][16])secp256k1_ecmult_static_context;
-	secp256k1_ecmult_gen_blind(ctx, NULL);
+	secp256k1_ecmult_gen_blind(ctx);
 }
 
-static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigned char *seed32) {
+static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, const secp256k1_scalar *gn) {
+	secp256k1_ge add;
+	secp256k1_ge_storage adds;
+	secp256k1_scalar gnb;
+	int bits;
+	int i, j;
+	memset(&adds, 0, sizeof(adds));
+	*r = ctx->initial;
+	/* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */
+	secp256k1_scalar_add(&gnb, gn, &ctx->blind);
+	add.infinity = 0;
+	for (j = 0; j < 64; j++) {
+		bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
+		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
+		secp256k1_ge_from_storage(&add, &adds);
+		secp256k1_gej_add_ge(r, r, &add);
+	}
+	bits = 0;
+	secp256k1_ge_clear(&add);
+	secp256k1_scalar_clear(&gnb);
+}
+
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx) {
 	secp256k1_scalar b;
 	secp256k1_gej gb;
 	secp256k1_fe s;

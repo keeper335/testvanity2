@@ -34,5 +34,23 @@
     <None Include="..\x64\Debug\HelloKernel.cl">
       <Filter>Исходные файлы</Filter>
     </None>
+    <None Include="secp.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="secp_field.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="secp_group.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="secp_hash.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="secp_scalar.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="secp_static_ctx.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>

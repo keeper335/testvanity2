@@ -1,7 +1,8 @@
 #pragma once
 #define USE_ECMULT_STATIC_PRECOMPUTATION 1
 #ifndef NULL
-#define NULL ((void *)0)
+//#define NULL ((void *)0)
+#define NULL 0
 #endif
 
 typedef unsigned long long uint64_t;
@@ -9,10 +10,15 @@ typedef unsigned long uint32_t;
 typedef unsigned int uint16_t;
 typedef unsigned int size_t;
 typedef int ssize_t;
+typedef long long int64_t;
+typedef long int32_t;
+typedef int int16_t;
 typedef unsigned char uint8_t;
 typedef struct { uint64_t n[5]; } secp256k1_fe;
 typedef struct { uint64_t n[4]; } secp256k1_fe_storage;
 typedef struct { uint64_t d[4]; } secp256k1_scalar;
+typedef uint64_t uint128_t;
+typedef int64_t int128_t;
 
 typedef struct {
 	secp256k1_fe x;
@@ -56,6 +62,7 @@ typedef struct {
 }}
 #define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
 #define SECP256K1_GE_STORAGE_CONST_GET(t) SECP256K1_FE_STORAGE_CONST_GET(t.x), SECP256K1_FE_STORAGE_CONST_GET(t.y)
+
 
 #define SC SECP256K1_GE_STORAGE_CONST
 static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
@@ -1213,3 +1220,19 @@ static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {
 }
 };
 #undef SC
+
+void memcpy(void* dst, void const* src, size_t size)
+{
+	size_t ret = 0;
+	char *i_dst = (char *)dst;
+	for (; ret <= size; ret++)
+		i_dst[ret] = ((char *)src)[ret];
+}
+
+void memset(void* dst, int byte, size_t size)
+{
+	size_t ret = 0;
+	int *i_dst = (int *)dst;
+	for (; ret <= size; ret++)
+		i_dst[ret] = byte;
+}

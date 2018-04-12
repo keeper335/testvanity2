@@ -1,5 +1,6 @@
 #define STEP 3072
 
+#include "secp.c"
 #define iter_64(a) do {int _i; for (_i = 0; _i < 64; _i++) { a(_i) }} while (0)
 
 
@@ -12,7 +13,7 @@ __kernel void hello_kernel() {
 	for (j=0; j<1000; j++) {
 		f1 += i*j/(i+j);
 		f2 *= f1;
-		f3 = powe(f2, j);
+		f3 = pow(f2, j);
 	}
 }
 

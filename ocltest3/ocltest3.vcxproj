@@ -161,7 +161,25 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="secp.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="secp_field.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="secp_group.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="secp_hash.c">
+      <FileType>CppCode</FileType>
+    </None>
     <ClCompile Include="ocltest3.cpp" />
+    <None Include="secp_scalar.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="secp_static_ctx.c">
+      <FileType>CppCode</FileType>
+    </None>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -170,7 +188,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\x64\Debug\HelloKernel.cl" />
+    <None Include="..\x64\Debug\HelloKernel.cl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
