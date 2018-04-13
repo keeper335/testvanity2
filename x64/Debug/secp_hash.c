@@ -253,7 +253,7 @@ void secp256k1_rfc6979_hmac_sha256_generate(secp256k1_rfc6979_hmac_sha256_t *rng
 
 	while (outlen > 0) {
 		secp256k1_hmac_sha256_t hmac;
-		int now = outlen;
+		size_t now = outlen;
 		secp256k1_hmac_sha256_initialize(&hmac, rng->k, 32);
 		secp256k1_hmac_sha256_write(&hmac, rng->v, 32);
 		secp256k1_hmac_sha256_finalize(&hmac, rng->v);
@@ -284,3 +284,11 @@ void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256_t *rng
 #undef Maj
 #undef ReadBE32
 #undef WriteBE32
+
+void sha256_hash(void *bin_buffer, void *text_in, size_t tsize) {
+	secp256k1_sha256_t sha1[32];
+	secp256k1_sha256_initialize(sha1);
+	secp256k1_sha256_write(sha1, (unsigned char *)text_in, tsize);
+	secp256k1_sha256_finalize(sha1, (unsigned char*)bin_buffer);
+}
+

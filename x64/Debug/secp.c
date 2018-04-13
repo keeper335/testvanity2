@@ -306,7 +306,6 @@ void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx) {
 	/* When seed is NULL, reset the initial point and blinding value. */
 	//TODO maybe need to alloc?
 	secp256k1_gej_set_initial(&ctx->initial);
-	printf("get set initial\n");
 	secp256k1_gej_neg(&ctx->initial, &ctx->initial);
 	secp256k1_scalar_set_int(&ctx->blind, 1);
 

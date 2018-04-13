@@ -64,7 +64,7 @@ void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SEC
 	d += c * (R1 >> 4) + t1;
 	r[1] = d & M; d >>= 26;
 	d += t2;
-	r[2] = d;
+	r[2] = (uint32_t)d;
 }
 
 void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a) {
@@ -119,7 +119,7 @@ void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a) {
 	d += c * (R1 >> 4) + t1;
 	r[1] = d & M; d >>= 26;
 	d += t2;
-	r[2] = d;
+	r[2] = (uint32_t)d;
 }
 
 int secp256k1_fe_is_zero(secp256k1_fe *a) {
