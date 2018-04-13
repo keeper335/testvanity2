@@ -1,270 +1,414 @@
-#pragma once
-/*
-* Cryptographic API.
-*
-* RIPEMD-160 - RACE Integrity Primitives Evaluation Message Digest.
-*
-* Based on the reference implementation by Antoon Bosselaers, ESAT-COSIC
-*
-* Copyright (c) 2008 Adrian-Ken Rueegsegger <ken@codelabs.ch>
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms of the GNU General Public License as published by the Free
-* Software Foundation; either version 2 of the License, or (at your option)
-* any later version.
-*
-*/
+/********************************************************************\
+ *
+ *      FILE:     rmd160.h
+ *
+ *      CONTENTS: Header file for a sample C-implementation of the
+ *                RIPEMD-160 hash-function. 
+ *      TARGET:   any computer with an ANSI C compiler
+ *
+ *      AUTHOR:   Antoon Bosselaers, ESAT-COSIC
+ *      DATE:     1 March 1996
+ *      VERSION:  1.0
+ *
+ *      Copyright (c) Katholieke Universiteit Leuven
+ *      1996, All Rights Reserved
+ *
+\********************************************************************/
 
-#define K1  0x00000000
-#define K2  0x5a827999
-#define K3  0x6ed9eba1
-#define K4  0x8f1bbcdc
-#define K5  0xa953fd4e
-#define KK1 0x50a28be6
-#define KK2 0x5c4dd124
-#define KK3 0x6d703ef3
-#define KK4 0x7a6d76e9
-#define KK5 0x00000000
+#ifndef  RMD160H           /* make sure this file is read only once */
+#define  RMD160H
 
-#define F1(x, y, z) (x ^ y ^ z)		/* XOR */
-#define F2(x, y, z) (z ^ (x & (y ^ z)))	/* x ? y : z */
-#define F3(x, y, z) ((x | ~y) ^ z)
-#define F4(x, y, z) (y ^ (z & (x ^ y)))	/* z ? x : y */
-#define F5(x, y, z) (x ^ (y | ~z))
+/********************************************************************/
 
-#define ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
-#define F(x, y, z) ((x) ^ (y) ^ (z))
+/* typedef 8 and 32 bit types, resp.  */
+/* adapt these, if necessary, 
+   for your operating system and compiler */
+typedef    unsigned char        byte;
+typedef    unsigned long        dword;
 
-#define ROUND(a, b, c, d, e, f, k, x, s) { \
-  (a) += F((b), (c), (d)) + (x) + (k); \
-  (a) = ROL((a), (s)) + (e); \
-  (c) = ROL((c), 10); \
+/* if this line causes a compiler error, 
+   adapt the defintion of dword above */
+typedef int the_correct_size_was_chosen [sizeof (dword) == 4? 1: -1];
+
+/********************************************************************/
+
+/* macro definitions */
+
+/* collect four bytes into one word: */
+#define BYTES_TO_DWORD(strptr)                    \
+            (((dword) *((strptr)+3) << 24) | \
+             ((dword) *((strptr)+2) << 16) | \
+             ((dword) *((strptr)+1) <<  8) | \
+             ((dword) *(strptr)))
+
+/* ROL(x, n) cyclically rotates x over n bits to the left */
+/* x must be of an unsigned 32 bits type and 0 <= n < 32. */
+#define ROL(x, n)        (((x) << (n)) | ((x) >> (32-(n))))
+
+/* the five basic functions F(), G() and H() */
+#define F(x, y, z)        ((x) ^ (y) ^ (z)) 
+#define G(x, y, z)        (((x) & (y)) | (~(x) & (z))) 
+#define H(x, y, z)        (((x) | ~(y)) ^ (z))
+#define I(x, y, z)        (((x) & (z)) | ((y) & ~(z))) 
+#define J(x, y, z)        ((x) ^ ((y) | ~(z)))
+  
+/* the ten basic operations FF() through III() */
+#define FF(a, b, c, d, e, x, s)        {\
+      (a) += F((b), (c), (d)) + (x);\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define GG(a, b, c, d, e, x, s)        {\
+      (a) += G((b), (c), (d)) + (x) + 0x5a827999UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define HH(a, b, c, d, e, x, s)        {\
+      (a) += H((b), (c), (d)) + (x) + 0x6ed9eba1UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define II(a, b, c, d, e, x, s)        {\
+      (a) += I((b), (c), (d)) + (x) + 0x8f1bbcdcUL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define JJ(a, b, c, d, e, x, s)        {\
+      (a) += J((b), (c), (d)) + (x) + 0xa953fd4eUL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define FFF(a, b, c, d, e, x, s)        {\
+      (a) += F((b), (c), (d)) + (x);\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define GGG(a, b, c, d, e, x, s)        {\
+      (a) += G((b), (c), (d)) + (x) + 0x7a6d76e9UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define HHH(a, b, c, d, e, x, s)        {\
+      (a) += H((b), (c), (d)) + (x) + 0x6d703ef3UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define III(a, b, c, d, e, x, s)        {\
+      (a) += I((b), (c), (d)) + (x) + 0x5c4dd124UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+#define JJJ(a, b, c, d, e, x, s)        {\
+      (a) += J((b), (c), (d)) + (x) + 0x50a28be6UL;\
+      (a) = ROL((a), (s)) + (e);\
+      (c) = ROL((c), 10);\
+   }
+
+/********************************************************************/
+
+/* function prototypes */
+
+void MDinit(dword *MDbuf)
+{
+	MDbuf[0] = 0x67452301UL;
+	MDbuf[1] = 0xefcdab89UL;
+	MDbuf[2] = 0x98badcfeUL;
+	MDbuf[3] = 0x10325476UL;
+	MDbuf[4] = 0xc3d2e1f0UL;
+
+	return;
 }
 
-static void rmd160_transform(unsigned int state[5], const unsigned int in[16])
+/*
+ *  initializes MDbuffer to "magic constants"
+ */
+
+
+void compress(dword *MDbuf, dword *X)
 {
-	unsigned int aa, bb, cc, dd, ee, aaa, bbb, ccc, ddd, eee;
+	dword aa = MDbuf[0], bb = MDbuf[1], cc = MDbuf[2],
+		dd = MDbuf[3], ee = MDbuf[4];
+	dword aaa = MDbuf[0], bbb = MDbuf[1], ccc = MDbuf[2],
+		ddd = MDbuf[3], eee = MDbuf[4];
 
-	/* Initialize left lane */
-	aa = state[0];
-	bb = state[1];
-	cc = state[2];
-	dd = state[3];
-	ee = state[4];
+	/* round 1 */
+	FF(aa, bb, cc, dd, ee, X[0], 11);
+	FF(ee, aa, bb, cc, dd, X[1], 14);
+	FF(dd, ee, aa, bb, cc, X[2], 15);
+	FF(cc, dd, ee, aa, bb, X[3], 12);
+	FF(bb, cc, dd, ee, aa, X[4], 5);
+	FF(aa, bb, cc, dd, ee, X[5], 8);
+	FF(ee, aa, bb, cc, dd, X[6], 7);
+	FF(dd, ee, aa, bb, cc, X[7], 9);
+	FF(cc, dd, ee, aa, bb, X[8], 11);
+	FF(bb, cc, dd, ee, aa, X[9], 13);
+	FF(aa, bb, cc, dd, ee, X[10], 14);
+	FF(ee, aa, bb, cc, dd, X[11], 15);
+	FF(dd, ee, aa, bb, cc, X[12], 6);
+	FF(cc, dd, ee, aa, bb, X[13], 7);
+	FF(bb, cc, dd, ee, aa, X[14], 9);
+	FF(aa, bb, cc, dd, ee, X[15], 8);
 
-	/* Initialize right lane */
-	aaa = state[0];
-	bbb = state[1];
-	ccc = state[2];
-	ddd = state[3];
-	eee = state[4];
+	/* round 2 */
+	GG(ee, aa, bb, cc, dd, X[7], 7);
+	GG(dd, ee, aa, bb, cc, X[4], 6);
+	GG(cc, dd, ee, aa, bb, X[13], 8);
+	GG(bb, cc, dd, ee, aa, X[1], 13);
+	GG(aa, bb, cc, dd, ee, X[10], 11);
+	GG(ee, aa, bb, cc, dd, X[6], 9);
+	GG(dd, ee, aa, bb, cc, X[15], 7);
+	GG(cc, dd, ee, aa, bb, X[3], 15);
+	GG(bb, cc, dd, ee, aa, X[12], 7);
+	GG(aa, bb, cc, dd, ee, X[0], 12);
+	GG(ee, aa, bb, cc, dd, X[9], 15);
+	GG(dd, ee, aa, bb, cc, X[5], 9);
+	GG(cc, dd, ee, aa, bb, X[2], 11);
+	GG(bb, cc, dd, ee, aa, X[14], 7);
+	GG(aa, bb, cc, dd, ee, X[11], 13);
+	GG(ee, aa, bb, cc, dd, X[8], 12);
 
-	/* round 1: left lane */
-	ROUND(aa, bb, cc, dd, ee, F1, K1, in[0], 11);
-	ROUND(ee, aa, bb, cc, dd, F1, K1, in[1], 14);
-	ROUND(dd, ee, aa, bb, cc, F1, K1, in[2], 15);
-	ROUND(cc, dd, ee, aa, bb, F1, K1, in[3], 12);
-	ROUND(bb, cc, dd, ee, aa, F1, K1, in[4], 5);
-	ROUND(aa, bb, cc, dd, ee, F1, K1, in[5], 8);
-	ROUND(ee, aa, bb, cc, dd, F1, K1, in[6], 7);
-	ROUND(dd, ee, aa, bb, cc, F1, K1, in[7], 9);
-	ROUND(cc, dd, ee, aa, bb, F1, K1, in[8], 11);
-	ROUND(bb, cc, dd, ee, aa, F1, K1, in[9], 13);
-	ROUND(aa, bb, cc, dd, ee, F1, K1, in[10], 14);
-	ROUND(ee, aa, bb, cc, dd, F1, K1, in[11], 15);
-	ROUND(dd, ee, aa, bb, cc, F1, K1, in[12], 6);
-	ROUND(cc, dd, ee, aa, bb, F1, K1, in[13], 7);
-	ROUND(bb, cc, dd, ee, aa, F1, K1, in[14], 9);
-	ROUND(aa, bb, cc, dd, ee, F1, K1, in[15], 8);
+	/* round 3 */
+	HH(dd, ee, aa, bb, cc, X[3], 11);
+	HH(cc, dd, ee, aa, bb, X[10], 13);
+	HH(bb, cc, dd, ee, aa, X[14], 6);
+	HH(aa, bb, cc, dd, ee, X[4], 7);
+	HH(ee, aa, bb, cc, dd, X[9], 14);
+	HH(dd, ee, aa, bb, cc, X[15], 9);
+	HH(cc, dd, ee, aa, bb, X[8], 13);
+	HH(bb, cc, dd, ee, aa, X[1], 15);
+	HH(aa, bb, cc, dd, ee, X[2], 14);
+	HH(ee, aa, bb, cc, dd, X[7], 8);
+	HH(dd, ee, aa, bb, cc, X[0], 13);
+	HH(cc, dd, ee, aa, bb, X[6], 6);
+	HH(bb, cc, dd, ee, aa, X[13], 5);
+	HH(aa, bb, cc, dd, ee, X[11], 12);
+	HH(ee, aa, bb, cc, dd, X[5], 7);
+	HH(dd, ee, aa, bb, cc, X[12], 5);
 
-	/* round 2: left lane */
-	ROUND(ee, aa, bb, cc, dd, F2, K2, in[7], 7);
-	ROUND(dd, ee, aa, bb, cc, F2, K2, in[4], 6);
-	ROUND(cc, dd, ee, aa, bb, F2, K2, in[13], 8);
-	ROUND(bb, cc, dd, ee, aa, F2, K2, in[1], 13);
-	ROUND(aa, bb, cc, dd, ee, F2, K2, in[10], 11);
-	ROUND(ee, aa, bb, cc, dd, F2, K2, in[6], 9);
-	ROUND(dd, ee, aa, bb, cc, F2, K2, in[15], 7);
-	ROUND(cc, dd, ee, aa, bb, F2, K2, in[3], 15);
-	ROUND(bb, cc, dd, ee, aa, F2, K2, in[12], 7);
-	ROUND(aa, bb, cc, dd, ee, F2, K2, in[0], 12);
-	ROUND(ee, aa, bb, cc, dd, F2, K2, in[9], 15);
-	ROUND(dd, ee, aa, bb, cc, F2, K2, in[5], 9);
-	ROUND(cc, dd, ee, aa, bb, F2, K2, in[2], 11);
-	ROUND(bb, cc, dd, ee, aa, F2, K2, in[14], 7);
-	ROUND(aa, bb, cc, dd, ee, F2, K2, in[11], 13);
-	ROUND(ee, aa, bb, cc, dd, F2, K2, in[8], 12);
+	/* round 4 */
+	II(cc, dd, ee, aa, bb, X[1], 11);
+	II(bb, cc, dd, ee, aa, X[9], 12);
+	II(aa, bb, cc, dd, ee, X[11], 14);
+	II(ee, aa, bb, cc, dd, X[10], 15);
+	II(dd, ee, aa, bb, cc, X[0], 14);
+	II(cc, dd, ee, aa, bb, X[8], 15);
+	II(bb, cc, dd, ee, aa, X[12], 9);
+	II(aa, bb, cc, dd, ee, X[4], 8);
+	II(ee, aa, bb, cc, dd, X[13], 9);
+	II(dd, ee, aa, bb, cc, X[3], 14);
+	II(cc, dd, ee, aa, bb, X[7], 5);
+	II(bb, cc, dd, ee, aa, X[15], 6);
+	II(aa, bb, cc, dd, ee, X[14], 8);
+	II(ee, aa, bb, cc, dd, X[5], 6);
+	II(dd, ee, aa, bb, cc, X[6], 5);
+	II(cc, dd, ee, aa, bb, X[2], 12);
 
-	/* round 3: left lane */
-	ROUND(dd, ee, aa, bb, cc, F3, K3, in[3], 11);
-	ROUND(cc, dd, ee, aa, bb, F3, K3, in[10], 13);
-	ROUND(bb, cc, dd, ee, aa, F3, K3, in[14], 6);
-	ROUND(aa, bb, cc, dd, ee, F3, K3, in[4], 7);
-	ROUND(ee, aa, bb, cc, dd, F3, K3, in[9], 14);
-	ROUND(dd, ee, aa, bb, cc, F3, K3, in[15], 9);
-	ROUND(cc, dd, ee, aa, bb, F3, K3, in[8], 13);
-	ROUND(bb, cc, dd, ee, aa, F3, K3, in[1], 15);
-	ROUND(aa, bb, cc, dd, ee, F3, K3, in[2], 14);
-	ROUND(ee, aa, bb, cc, dd, F3, K3, in[7], 8);
-	ROUND(dd, ee, aa, bb, cc, F3, K3, in[0], 13);
-	ROUND(cc, dd, ee, aa, bb, F3, K3, in[6], 6);
-	ROUND(bb, cc, dd, ee, aa, F3, K3, in[13], 5);
-	ROUND(aa, bb, cc, dd, ee, F3, K3, in[11], 12);
-	ROUND(ee, aa, bb, cc, dd, F3, K3, in[5], 7);
-	ROUND(dd, ee, aa, bb, cc, F3, K3, in[12], 5);
+	/* round 5 */
+	JJ(bb, cc, dd, ee, aa, X[4], 9);
+	JJ(aa, bb, cc, dd, ee, X[0], 15);
+	JJ(ee, aa, bb, cc, dd, X[5], 5);
+	JJ(dd, ee, aa, bb, cc, X[9], 11);
+	JJ(cc, dd, ee, aa, bb, X[7], 6);
+	JJ(bb, cc, dd, ee, aa, X[12], 8);
+	JJ(aa, bb, cc, dd, ee, X[2], 13);
+	JJ(ee, aa, bb, cc, dd, X[10], 12);
+	JJ(dd, ee, aa, bb, cc, X[14], 5);
+	JJ(cc, dd, ee, aa, bb, X[1], 12);
+	JJ(bb, cc, dd, ee, aa, X[3], 13);
+	JJ(aa, bb, cc, dd, ee, X[8], 14);
+	JJ(ee, aa, bb, cc, dd, X[11], 11);
+	JJ(dd, ee, aa, bb, cc, X[6], 8);
+	JJ(cc, dd, ee, aa, bb, X[15], 5);
+	JJ(bb, cc, dd, ee, aa, X[13], 6);
 
-	/* round 4: left lane */
-	ROUND(cc, dd, ee, aa, bb, F4, K4, in[1], 11);
-	ROUND(bb, cc, dd, ee, aa, F4, K4, in[9], 12);
-	ROUND(aa, bb, cc, dd, ee, F4, K4, in[11], 14);
-	ROUND(ee, aa, bb, cc, dd, F4, K4, in[10], 15);
-	ROUND(dd, ee, aa, bb, cc, F4, K4, in[0], 14);
-	ROUND(cc, dd, ee, aa, bb, F4, K4, in[8], 15);
-	ROUND(bb, cc, dd, ee, aa, F4, K4, in[12], 9);
-	ROUND(aa, bb, cc, dd, ee, F4, K4, in[4], 8);
-	ROUND(ee, aa, bb, cc, dd, F4, K4, in[13], 9);
-	ROUND(dd, ee, aa, bb, cc, F4, K4, in[3], 14);
-	ROUND(cc, dd, ee, aa, bb, F4, K4, in[7], 5);
-	ROUND(bb, cc, dd, ee, aa, F4, K4, in[15], 6);
-	ROUND(aa, bb, cc, dd, ee, F4, K4, in[14], 8);
-	ROUND(ee, aa, bb, cc, dd, F4, K4, in[5], 6);
-	ROUND(dd, ee, aa, bb, cc, F4, K4, in[6], 5);
-	ROUND(cc, dd, ee, aa, bb, F4, K4, in[2], 12);
+	/* parallel round 1 */
+	JJJ(aaa, bbb, ccc, ddd, eee, X[5], 8);
+	JJJ(eee, aaa, bbb, ccc, ddd, X[14], 9);
+	JJJ(ddd, eee, aaa, bbb, ccc, X[7], 9);
+	JJJ(ccc, ddd, eee, aaa, bbb, X[0], 11);
+	JJJ(bbb, ccc, ddd, eee, aaa, X[9], 13);
+	JJJ(aaa, bbb, ccc, ddd, eee, X[2], 15);
+	JJJ(eee, aaa, bbb, ccc, ddd, X[11], 15);
+	JJJ(ddd, eee, aaa, bbb, ccc, X[4], 5);
+	JJJ(ccc, ddd, eee, aaa, bbb, X[13], 7);
+	JJJ(bbb, ccc, ddd, eee, aaa, X[6], 7);
+	JJJ(aaa, bbb, ccc, ddd, eee, X[15], 8);
+	JJJ(eee, aaa, bbb, ccc, ddd, X[8], 11);
+	JJJ(ddd, eee, aaa, bbb, ccc, X[1], 14);
+	JJJ(ccc, ddd, eee, aaa, bbb, X[10], 14);
+	JJJ(bbb, ccc, ddd, eee, aaa, X[3], 12);
+	JJJ(aaa, bbb, ccc, ddd, eee, X[12], 6);
 
-	/* round 5: left lane */
-	ROUND(bb, cc, dd, ee, aa, F5, K5, in[4], 9);
-	ROUND(aa, bb, cc, dd, ee, F5, K5, in[0], 15);
-	ROUND(ee, aa, bb, cc, dd, F5, K5, in[5], 5);
-	ROUND(dd, ee, aa, bb, cc, F5, K5, in[9], 11);
-	ROUND(cc, dd, ee, aa, bb, F5, K5, in[7], 6);
-	ROUND(bb, cc, dd, ee, aa, F5, K5, in[12], 8);
-	ROUND(aa, bb, cc, dd, ee, F5, K5, in[2], 13);
-	ROUND(ee, aa, bb, cc, dd, F5, K5, in[10], 12);
-	ROUND(dd, ee, aa, bb, cc, F5, K5, in[14], 5);
-	ROUND(cc, dd, ee, aa, bb, F5, K5, in[1], 12);
-	ROUND(bb, cc, dd, ee, aa, F5, K5, in[3], 13);
-	ROUND(aa, bb, cc, dd, ee, F5, K5, in[8], 14);
-	ROUND(ee, aa, bb, cc, dd, F5, K5, in[11], 11);
-	ROUND(dd, ee, aa, bb, cc, F5, K5, in[6], 8);
-	ROUND(cc, dd, ee, aa, bb, F5, K5, in[15], 5);
-	ROUND(bb, cc, dd, ee, aa, F5, K5, in[13], 6);
+	/* parallel round 2 */
+	III(eee, aaa, bbb, ccc, ddd, X[6], 9);
+	III(ddd, eee, aaa, bbb, ccc, X[11], 13);
+	III(ccc, ddd, eee, aaa, bbb, X[3], 15);
+	III(bbb, ccc, ddd, eee, aaa, X[7], 7);
+	III(aaa, bbb, ccc, ddd, eee, X[0], 12);
+	III(eee, aaa, bbb, ccc, ddd, X[13], 8);
+	III(ddd, eee, aaa, bbb, ccc, X[5], 9);
+	III(ccc, ddd, eee, aaa, bbb, X[10], 11);
+	III(bbb, ccc, ddd, eee, aaa, X[14], 7);
+	III(aaa, bbb, ccc, ddd, eee, X[15], 7);
+	III(eee, aaa, bbb, ccc, ddd, X[8], 12);
+	III(ddd, eee, aaa, bbb, ccc, X[12], 7);
+	III(ccc, ddd, eee, aaa, bbb, X[4], 6);
+	III(bbb, ccc, ddd, eee, aaa, X[9], 15);
+	III(aaa, bbb, ccc, ddd, eee, X[1], 13);
+	III(eee, aaa, bbb, ccc, ddd, X[2], 11);
 
-	/* round 1: right lane */
-	ROUND(aaa, bbb, ccc, ddd, eee, F5, KK1, in[5], 8);
-	ROUND(eee, aaa, bbb, ccc, ddd, F5, KK1, in[14], 9);
-	ROUND(ddd, eee, aaa, bbb, ccc, F5, KK1, in[7], 9);
-	ROUND(ccc, ddd, eee, aaa, bbb, F5, KK1, in[0], 11);
-	ROUND(bbb, ccc, ddd, eee, aaa, F5, KK1, in[9], 13);
-	ROUND(aaa, bbb, ccc, ddd, eee, F5, KK1, in[2], 15);
-	ROUND(eee, aaa, bbb, ccc, ddd, F5, KK1, in[11], 15);
-	ROUND(ddd, eee, aaa, bbb, ccc, F5, KK1, in[4], 5);
-	ROUND(ccc, ddd, eee, aaa, bbb, F5, KK1, in[13], 7);
-	ROUND(bbb, ccc, ddd, eee, aaa, F5, KK1, in[6], 7);
-	ROUND(aaa, bbb, ccc, ddd, eee, F5, KK1, in[15], 8);
-	ROUND(eee, aaa, bbb, ccc, ddd, F5, KK1, in[8], 11);
-	ROUND(ddd, eee, aaa, bbb, ccc, F5, KK1, in[1], 14);
-	ROUND(ccc, ddd, eee, aaa, bbb, F5, KK1, in[10], 14);
-	ROUND(bbb, ccc, ddd, eee, aaa, F5, KK1, in[3], 12);
-	ROUND(aaa, bbb, ccc, ddd, eee, F5, KK1, in[12], 6);
+	/* parallel round 3 */
+	HHH(ddd, eee, aaa, bbb, ccc, X[15], 9);
+	HHH(ccc, ddd, eee, aaa, bbb, X[5], 7);
+	HHH(bbb, ccc, ddd, eee, aaa, X[1], 15);
+	HHH(aaa, bbb, ccc, ddd, eee, X[3], 11);
+	HHH(eee, aaa, bbb, ccc, ddd, X[7], 8);
+	HHH(ddd, eee, aaa, bbb, ccc, X[14], 6);
+	HHH(ccc, ddd, eee, aaa, bbb, X[6], 6);
+	HHH(bbb, ccc, ddd, eee, aaa, X[9], 14);
+	HHH(aaa, bbb, ccc, ddd, eee, X[11], 12);
+	HHH(eee, aaa, bbb, ccc, ddd, X[8], 13);
+	HHH(ddd, eee, aaa, bbb, ccc, X[12], 5);
+	HHH(ccc, ddd, eee, aaa, bbb, X[2], 14);
+	HHH(bbb, ccc, ddd, eee, aaa, X[10], 13);
+	HHH(aaa, bbb, ccc, ddd, eee, X[0], 13);
+	HHH(eee, aaa, bbb, ccc, ddd, X[4], 7);
+	HHH(ddd, eee, aaa, bbb, ccc, X[13], 5);
 
-	/* round 2: right lane */
-	ROUND(eee, aaa, bbb, ccc, ddd, F4, KK2, in[6], 9);
-	ROUND(ddd, eee, aaa, bbb, ccc, F4, KK2, in[11], 13);
-	ROUND(ccc, ddd, eee, aaa, bbb, F4, KK2, in[3], 15);
-	ROUND(bbb, ccc, ddd, eee, aaa, F4, KK2, in[7], 7);
-	ROUND(aaa, bbb, ccc, ddd, eee, F4, KK2, in[0], 12);
-	ROUND(eee, aaa, bbb, ccc, ddd, F4, KK2, in[13], 8);
-	ROUND(ddd, eee, aaa, bbb, ccc, F4, KK2, in[5], 9);
-	ROUND(ccc, ddd, eee, aaa, bbb, F4, KK2, in[10], 11);
-	ROUND(bbb, ccc, ddd, eee, aaa, F4, KK2, in[14], 7);
-	ROUND(aaa, bbb, ccc, ddd, eee, F4, KK2, in[15], 7);
-	ROUND(eee, aaa, bbb, ccc, ddd, F4, KK2, in[8], 12);
-	ROUND(ddd, eee, aaa, bbb, ccc, F4, KK2, in[12], 7);
-	ROUND(ccc, ddd, eee, aaa, bbb, F4, KK2, in[4], 6);
-	ROUND(bbb, ccc, ddd, eee, aaa, F4, KK2, in[9], 15);
-	ROUND(aaa, bbb, ccc, ddd, eee, F4, KK2, in[1], 13);
-	ROUND(eee, aaa, bbb, ccc, ddd, F4, KK2, in[2], 11);
+	/* parallel round 4 */
+	GGG(ccc, ddd, eee, aaa, bbb, X[8], 15);
+	GGG(bbb, ccc, ddd, eee, aaa, X[6], 5);
+	GGG(aaa, bbb, ccc, ddd, eee, X[4], 8);
+	GGG(eee, aaa, bbb, ccc, ddd, X[1], 11);
+	GGG(ddd, eee, aaa, bbb, ccc, X[3], 14);
+	GGG(ccc, ddd, eee, aaa, bbb, X[11], 14);
+	GGG(bbb, ccc, ddd, eee, aaa, X[15], 6);
+	GGG(aaa, bbb, ccc, ddd, eee, X[0], 14);
+	GGG(eee, aaa, bbb, ccc, ddd, X[5], 6);
+	GGG(ddd, eee, aaa, bbb, ccc, X[12], 9);
+	GGG(ccc, ddd, eee, aaa, bbb, X[2], 12);
+	GGG(bbb, ccc, ddd, eee, aaa, X[13], 9);
+	GGG(aaa, bbb, ccc, ddd, eee, X[9], 12);
+	GGG(eee, aaa, bbb, ccc, ddd, X[7], 5);
+	GGG(ddd, eee, aaa, bbb, ccc, X[10], 15);
+	GGG(ccc, ddd, eee, aaa, bbb, X[14], 8);
 
-	/* round 3: right lane */
-	ROUND(ddd, eee, aaa, bbb, ccc, F3, KK3, in[15], 9);
-	ROUND(ccc, ddd, eee, aaa, bbb, F3, KK3, in[5], 7);
-	ROUND(bbb, ccc, ddd, eee, aaa, F3, KK3, in[1], 15);
-	ROUND(aaa, bbb, ccc, ddd, eee, F3, KK3, in[3], 11);
-	ROUND(eee, aaa, bbb, ccc, ddd, F3, KK3, in[7], 8);
-	ROUND(ddd, eee, aaa, bbb, ccc, F3, KK3, in[14], 6);
-	ROUND(ccc, ddd, eee, aaa, bbb, F3, KK3, in[6], 6);
-	ROUND(bbb, ccc, ddd, eee, aaa, F3, KK3, in[9], 14);
-	ROUND(aaa, bbb, ccc, ddd, eee, F3, KK3, in[11], 12);
-	ROUND(eee, aaa, bbb, ccc, ddd, F3, KK3, in[8], 13);
-	ROUND(ddd, eee, aaa, bbb, ccc, F3, KK3, in[12], 5);
-	ROUND(ccc, ddd, eee, aaa, bbb, F3, KK3, in[2], 14);
-	ROUND(bbb, ccc, ddd, eee, aaa, F3, KK3, in[10], 13);
-	ROUND(aaa, bbb, ccc, ddd, eee, F3, KK3, in[0], 13);
-	ROUND(eee, aaa, bbb, ccc, ddd, F3, KK3, in[4], 7);
-	ROUND(ddd, eee, aaa, bbb, ccc, F3, KK3, in[13], 5);
-
-	/* round 4: right lane */
-	ROUND(ccc, ddd, eee, aaa, bbb, F2, KK4, in[8], 15);
-	ROUND(bbb, ccc, ddd, eee, aaa, F2, KK4, in[6], 5);
-	ROUND(aaa, bbb, ccc, ddd, eee, F2, KK4, in[4], 8);
-	ROUND(eee, aaa, bbb, ccc, ddd, F2, KK4, in[1], 11);
-	ROUND(ddd, eee, aaa, bbb, ccc, F2, KK4, in[3], 14);
-	ROUND(ccc, ddd, eee, aaa, bbb, F2, KK4, in[11], 14);
-	ROUND(bbb, ccc, ddd, eee, aaa, F2, KK4, in[15], 6);
-	ROUND(aaa, bbb, ccc, ddd, eee, F2, KK4, in[0], 14);
-	ROUND(eee, aaa, bbb, ccc, ddd, F2, KK4, in[5], 6);
-	ROUND(ddd, eee, aaa, bbb, ccc, F2, KK4, in[12], 9);
-	ROUND(ccc, ddd, eee, aaa, bbb, F2, KK4, in[2], 12);
-	ROUND(bbb, ccc, ddd, eee, aaa, F2, KK4, in[13], 9);
-	ROUND(aaa, bbb, ccc, ddd, eee, F2, KK4, in[9], 12);
-	ROUND(eee, aaa, bbb, ccc, ddd, F2, KK4, in[7], 5);
-	ROUND(ddd, eee, aaa, bbb, ccc, F2, KK4, in[10], 15);
-	ROUND(ccc, ddd, eee, aaa, bbb, F2, KK4, in[14], 8);
-
-	/* round 5: right lane */
-	ROUND(bbb, ccc, ddd, eee, aaa, F1, KK5, in[12], 8);
-	ROUND(aaa, bbb, ccc, ddd, eee, F1, KK5, in[15], 5);
-	ROUND(eee, aaa, bbb, ccc, ddd, F1, KK5, in[10], 12);
-	ROUND(ddd, eee, aaa, bbb, ccc, F1, KK5, in[4], 9);
-	ROUND(ccc, ddd, eee, aaa, bbb, F1, KK5, in[1], 12);
-	ROUND(bbb, ccc, ddd, eee, aaa, F1, KK5, in[5], 5);
-	ROUND(aaa, bbb, ccc, ddd, eee, F1, KK5, in[8], 14);
-	ROUND(eee, aaa, bbb, ccc, ddd, F1, KK5, in[7], 6);
-	ROUND(ddd, eee, aaa, bbb, ccc, F1, KK5, in[6], 8);
-	ROUND(ccc, ddd, eee, aaa, bbb, F1, KK5, in[2], 13);
-	ROUND(bbb, ccc, ddd, eee, aaa, F1, KK5, in[13], 6);
-	ROUND(aaa, bbb, ccc, ddd, eee, F1, KK5, in[14], 5);
-	ROUND(eee, aaa, bbb, ccc, ddd, F1, KK5, in[0], 15);
-	ROUND(ddd, eee, aaa, bbb, ccc, F1, KK5, in[3], 13);
-	ROUND(ccc, ddd, eee, aaa, bbb, F1, KK5, in[9], 11);
-	ROUND(bbb, ccc, ddd, eee, aaa, F1, KK5, in[11], 11);
+	/* parallel round 5 */
+	FFF(bbb, ccc, ddd, eee, aaa, X[12], 8);
+	FFF(aaa, bbb, ccc, ddd, eee, X[15], 5);
+	FFF(eee, aaa, bbb, ccc, ddd, X[10], 12);
+	FFF(ddd, eee, aaa, bbb, ccc, X[4], 9);
+	FFF(ccc, ddd, eee, aaa, bbb, X[1], 12);
+	FFF(bbb, ccc, ddd, eee, aaa, X[5], 5);
+	FFF(aaa, bbb, ccc, ddd, eee, X[8], 14);
+	FFF(eee, aaa, bbb, ccc, ddd, X[7], 6);
+	FFF(ddd, eee, aaa, bbb, ccc, X[6], 8);
+	FFF(ccc, ddd, eee, aaa, bbb, X[2], 13);
+	FFF(bbb, ccc, ddd, eee, aaa, X[13], 6);
+	FFF(aaa, bbb, ccc, ddd, eee, X[14], 5);
+	FFF(eee, aaa, bbb, ccc, ddd, X[0], 15);
+	FFF(ddd, eee, aaa, bbb, ccc, X[3], 13);
+	FFF(ccc, ddd, eee, aaa, bbb, X[9], 11);
+	FFF(bbb, ccc, ddd, eee, aaa, X[11], 11);
 
 	/* combine results */
-	ddd += cc + state[1];		/* final result for state[0] */
-	state[1] = state[2] + dd + eee;
-	state[2] = state[3] + ee + aaa;
-	state[3] = state[4] + aa + bbb;
-	state[4] = state[0] + bb + ccc;
-	state[0] = ddd;
+	ddd += cc + MDbuf[1];               /* final result for MDbuf[0] */
+	MDbuf[1] = MDbuf[2] + dd + eee;
+	MDbuf[2] = MDbuf[3] + ee + aaa;
+	MDbuf[3] = MDbuf[4] + aa + bbb;
+	MDbuf[4] = MDbuf[0] + bb + ccc;
+	MDbuf[0] = ddd;
+
+	return;
 }
 
-void rmd160_hash(char output[20], const char input[64])
-{
-	unsigned int i, *input_block = (unsigned int *)input, *out_block = (unsigned int *)output;
-	unsigned int digest[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
-	char *digest_c = (char*)digest;
-	unsigned int msg_len = 64;
-	char* msg = (char *)input;
-	char *hash = (char *)output;
-	int j;
-	rmd160_transform(digest, input_block);
-	//for (i = 0;i < 20;i++)
-//		output[i] = digest_c[i];
+/*
+ *  the compression function.
+ *  transforms MDbuf using message bytes X[0] through X[15]
+ */
 
-	for (i = 0; i < 5; ++i) {
-		*(hash++) = digest[i]&0xFF;
-		*(hash++) = digest[i] >> 8;
-		*(hash++) = digest[i] >> 16;
-		*(hash++) = digest[i] >> 24;
+void MDfinish(dword *MDbuf, byte *strptr, dword lswlen, dword mswlen)
+{
+	unsigned int i;                                 /* counter       */
+	dword        X[16];                             /* message words */
+
+	memset(X, 0, 16 * sizeof(dword));
+
+	/* put bytes from strptr into X */
+	for (i = 0; i<(lswlen & 63); i++) {
+		/* byte i goes into word X[i div 4] at pos.  8*(i mod 4)  */
+		X[i >> 2] ^= (dword)*strptr++ << (8 * (i & 3));
+	}
+
+	/* append the bit m_n == 1 */
+	X[(lswlen >> 2) & 15] ^= (dword)1 << (8 * (lswlen & 3) + 7);
+
+	if ((lswlen & 63) > 55) {
+		/* length goes to next block */
+		compress(MDbuf, X);
+		memset(X, 0, 16 * sizeof(dword));
+	}
+
+	/* append length in bits*/
+	X[14] = lswlen << 3;
+	X[15] = (lswlen >> 29) | (mswlen << 3);
+	compress(MDbuf, X);
+
+	return;
+}
+/*
+ *  puts bytes from strptr into X and pad out; appends length 
+ *  and finally, compresses the last block(s)
+ *  note: length in bits == 8 * (lswlen + 2^32 mswlen).
+ *  note: there are (lswlen mod 64) bytes left in strptr.
+ */
+
+#define RMDsize 160
+void RMD(byte *hashcode, byte *message)
+/*
+* returns RMD(message)
+* message should be a string terminated by '\0'
+*/
+{
+	dword         MDbuf[160 / 32];   /* contains (A, B, C, D(, E))   */
+	dword         X[16];               /* current 16-word chunk        */
+	unsigned int  i;                   /* counter                      */
+	dword         length;              /* length in bytes of message   */
+	dword         nbytes;              /* # of bytes not yet processed */
+
+									   /* initialize */
+	MDinit(MDbuf);
+	length = (dword)strlen((char *)message);
+
+	/* process message in 16-word chunks */
+	for (nbytes = length; nbytes > 63; nbytes -= 64) {
+		for (i = 0; i<16; i++) {
+			X[i] = BYTES_TO_DWORD(message);
+			message += 4;
+		}
+		compress(MDbuf, X);
+	}                                    /* length mod 64 bytes left */
+
+										 /* finish: */
+	MDfinish(MDbuf, message, length, 0);
+
+	for (i = 0; i<RMDsize / 8; i += 4) {
+		hashcode[i] = (byte)MDbuf[i >> 2];         /* implicit cast to byte  */
+		hashcode[i + 1] = (byte)(MDbuf[i >> 2] >> 8);  /*  extracts the 8 least  */
+		hashcode[i + 2] = (byte)(MDbuf[i >> 2] >> 16);  /*  significant bits.     */
+		hashcode[i + 3] = (byte)(MDbuf[i >> 2] >> 24);
 	}
 }
+
+void RMDstring(const char *message)
+{
+	unsigned int  i;
+	byte         hashcode[20];
+
+	RMD(hashcode, (byte *)message);
+	printf("\n* message: %s\n  hashcode: ", message);
+	for (i = 0; i<RMDsize / 8; i++)
+		printf("%02x", hashcode[i]);
+	printf("\n");
+}
+#endif  /* RMD160H */
