@@ -153,7 +153,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="b58.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
