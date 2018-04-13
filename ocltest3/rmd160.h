@@ -252,48 +252,17 @@ void rmd160_hash(char output[20], const char input[64])
 {
 	unsigned int i, *input_block = (unsigned int *)input, *out_block = (unsigned int *)output;
 	unsigned int digest[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
+	char *digest_c = (char*)digest;
 	unsigned int msg_len = 64;
 	char* msg = (char *)input;
 	char *hash = (char *)output;
 	int j;
-	//rmd160_transform(digest, input_block);
-	//for (i = 0;i < 5;i++)
-		//out_block[i] = digest[i];
+	rmd160_transform(digest, input_block);
+	//for (i = 0;i < 20;i++)
+//		output[i] = digest_c[i];
 
-	for (i = 0; i < (msg_len >> 6); ++i) {
-		unsigned int chunk[16];
-
-		for (j = 0; j < 16; ++j) {
-			chunk[j] = (unsigned int)(*(msg++));
-			chunk[j] |= (unsigned int)(*(msg++)) << 8;
-			chunk[j] |= (unsigned int)(*(msg++)) << 16;
-			chunk[j] |= (unsigned int)(*(msg++)) << 24;
-		}
-
-		rmd160_transform(digest, chunk);
-	}
-
-	// Last chunk
-	{
-		unsigned int chunk[16] = { 0 };
-
-		for (i = 0; i < (msg_len & 63); ++i) {
-			chunk[i >> 2] ^= (unsigned int)*msg++ << ((i & 3) << 3);
-		}
-
-		chunk[(msg_len >> 2) & 15] ^= (unsigned int)1 << (8 * (msg_len & 3) + 7);
-
-		if ((msg_len & 63) > 55) {
-			rmd160_transform(digest, chunk);
-			memset(chunk, 0, 64);
-		}
-
-		chunk[14] = msg_len << 3;
-		chunk[15] = (msg_len >> 29);
-		rmd160_transform(digest, chunk);
-	}
 	for (i = 0; i < 5; ++i) {
-		*(hash++) = digest[i];
+		*(hash++) = digest[i]&0xFF;
 		*(hash++) = digest[i] >> 8;
 		*(hash++) = digest[i] >> 16;
 		*(hash++) = digest[i] >> 24;
