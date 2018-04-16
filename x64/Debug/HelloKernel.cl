@@ -1,32 +1,34 @@
 #define STEP 3072
 
-#include "secp.c"
-#define iter_64(a) do {int _i; for (_i = 0; _i < 64; _i++) { a(_i) }} while (0)
+//#include "secp.c"
 
-
-
-__kernel void hello_kernel() {
-  // Get the index of the current element to be processed
+__kernel void hello_kernel(__global unsigned char* out) {
     int i = get_global_id(0), j;
 
-	//secp256k1_ecmult_gen_context sec_ctx;
-	//secp256k1_ecmult_gen_context_init(&sec_ctx);
-	//secp256k1_ecmult_gen_context_build(&sec_ctx);
+	
   
-	float f1=0,f2=1,f3=1;
-	for (j=0; j<1000; j++) {
-		f1 += i*j/(i+j);
-		f2 *= f1;
-		f3 = pow(f2, j);
-	}
+	out[0] = 'H';
+	out[1] = 'e';
+	out[2] = 'l';
+	out[3] = 'l';
+	out[4] = '0';
+	out[5] = '\0';
 }
 
-__kernel void vector_add(__global const int *A, __global const int *B, __global int *C) {
- 
-    // Get the index of the current element to be processed
-    int i = get_global_id(0);
- 
-    // Do the operation
-    C[i] = A[i] + B[i];
+void temp_kernel () {
+//secp256k1_ecmult_gen_context sec_ctx;
+	
 
+	//secp256k1_scalar scalar_key = { 0, };
+	//uint8_t *p = (uint8_t *)scalar_key.d;
+	//secp256k1_gej gej;
+	//secp256k1_ge ge;
+	//uint8_t *sha_block = (uint8_t *) out;
+	//p[0] = 0x34; p[1] = 0x12;
+//secp256k1_ecmult_gen_context_init(&sec_ctx);
+
+//secp256k1_ecmult_gen(&sec_ctx, &gej, &scalar_key);
+	//secp256k1_ge_set_gej_var(&ge, &gej);
+	//sha_block[0] = (secp256k1_fe_is_odd(&ge.y) ? 0x03 : 0x02);
+	//secp256k1_fe_get_b32(sha_block + 1, &ge.x);
 }

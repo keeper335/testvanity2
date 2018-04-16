@@ -2,7 +2,7 @@
 //#define SECP256K1_RESTRICT __restrict
 #define SECP256K1_RESTRICT
 
-static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a);
+void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a);
 
 
 void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b) {

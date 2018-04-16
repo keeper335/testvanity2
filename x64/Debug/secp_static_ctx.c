@@ -53,20 +53,33 @@ typedef struct {
 	secp256k1_gej initial;
 } secp256k1_ecmult_gen_context;
 
-#ifndef _VCRUNTIME_H
-void memcpy(void* dst, void const* src, size_t size)
+
+void my_memcpy(void* dst, void const* src, size_t size)
 {
 	size_t ret = 0;
-	char *i_dst = (char *)dst;
-	for (; ret <= size; ret++)
-		i_dst[ret] = ((char *)src)[ret];
+	unsigned char *i_dst = (unsigned char *)dst;
+	for (; ret < size; ret++)
+		i_dst[ret] = ((unsigned char *)src)[ret];
 }
 
-void memset(void* dst, int byte, size_t size)
+void my_memset(void* dst, uint8_t byte, size_t size)
 {
 	size_t ret = 0;
 	int *i_dst = (int *)dst;
-	for (; ret <= size; ret++)
+	for (; ret < size; ret++)
 		i_dst[ret] = byte;
 }
+
+#ifndef _INC_STRING
+void* __cdecl memcpy(
+	void* _Dst,
+	void const* _Src,
+	size_t      _Size
+);
+
+void* __cdecl memset(
+	void*  _Dst,
+	int    _Val,
+	size_t _Size
+);
 #endif
