@@ -285,10 +285,20 @@ void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256_t *rng
 #undef ReadBE32
 #undef WriteBE32
 
-void sha256_hash(void *bin_buffer, void *text_in, size_t tsize) {
+void sha256_hash(void *bin_out, void *bin_in, size_t tsize) {
+	const unsigned char c2h_alpha[] = "0123456789abcdef";
+
 	secp256k1_sha256_t sha1[32];
+	size_t i;
+	unsigned char text_in[256] = { 0, }, *p = (unsigned char *)bin_in;
+	unsigned char text_in2[256] = { 0, };
+	for (i = 0; i < tsize; i++) {
+		text_in[i * 2] = c2h_alpha[(p[i] & 0xF0) >> 4];
+		text_in[i * 2 + 1] = c2h_alpha[p[i] & 0x0F];
+	}
+
 	secp256k1_sha256_initialize(sha1);
-	secp256k1_sha256_write(sha1, (unsigned char *)text_in, tsize);
-	secp256k1_sha256_finalize(sha1, (unsigned char*)bin_buffer);
+	secp256k1_sha256_write(sha1, (unsigned char *)text_in, tsize * 2);
+	secp256k1_sha256_finalize(sha1, (unsigned char*)bin_out);
 }
 
