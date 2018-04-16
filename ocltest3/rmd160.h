@@ -90,7 +90,7 @@ void rmd160_transform(unsigned int *MDbuf, unsigned int *X)
 }
 
 
-void MDfinish(unsigned int *MDbuf, unsigned char *strptr, unsigned int lswlen, unsigned int mswlen)
+void MDfinish(unsigned int *MDbuf, unsigned char *strptr, size_t lswlen, unsigned int mswlen)
 {
 	unsigned int i, X[16] = { 0, };
 	for (i = 0; i<(lswlen & 63); i++) X[i >> 2] ^= (unsigned int)*strptr++ << (8 * (i & 3));
@@ -102,49 +102,40 @@ void MDfinish(unsigned int *MDbuf, unsigned char *strptr, unsigned int lswlen, u
 		memset(X, 0, 16 * sizeof(unsigned int));
 	}
 
-	X[14] = lswlen << 3;
-	X[15] = (lswlen >> 29) | (mswlen << 3);
+	X[14] = (unsigned int)lswlen << 3;
+	X[15] = (unsigned int)(lswlen >> 29) | (mswlen << 3);
 	rmd160_transform(MDbuf, X);
 
 	return;
 }
 
-void RIPEMD160(unsigned char *hashcode, unsigned char *message)
+void RIPEMD160(void *bin_out, void *bin_in, size_t len)
 {
-	unsigned int MDbuf[5], i, X[16], length, nbytes;
+	unsigned int MDbuf[5], i, X[16];
+	size_t nbytes;
+	unsigned char *str_in = (unsigned char *)bin_in, *str_out = (unsigned char *)bin_out;
 
 	MDbuf[0] = 0x67452301UL;
 	MDbuf[1] = 0xefcdab89UL;
 	MDbuf[2] = 0x98badcfeUL;
 	MDbuf[3] = 0x10325476UL;
 	MDbuf[4] = 0xc3d2e1f0UL;
-	length = (unsigned int)strlen((char *)message);
-	for (nbytes = length; nbytes > 63; nbytes -= 64) {
+
+	for (nbytes = len; nbytes > 63; nbytes -= 64) {
 		for (i = 0; i<16; i++) {
-			X[i] = BYTES_TO_DWORD(message);
-			message += 4;
+			X[i] = BYTES_TO_DWORD(str_in);
+			str_in += 4;
 		}
 		rmd160_transform(MDbuf, X);
 	}
-	MDfinish(MDbuf, message, length, 0);
+	MDfinish(MDbuf, str_in, len, 0);
 
 	for (i = 0; i<20; i += 4) {
-		hashcode[i] = (unsigned char)MDbuf[i >> 2];
-		hashcode[i + 1] = (unsigned char)(MDbuf[i >> 2] >> 8);
-		hashcode[i + 2] = (unsigned char)(MDbuf[i >> 2] >> 16);
-		hashcode[i + 3] = (unsigned char)(MDbuf[i >> 2] >> 24);
+		str_out[i] = (unsigned char)MDbuf[i >> 2];
+		str_out[i + 1] = (unsigned char)(MDbuf[i >> 2] >> 8);
+		str_out[i + 2] = (unsigned char)(MDbuf[i >> 2] >> 16);
+		str_out[i + 3] = (unsigned char)(MDbuf[i >> 2] >> 24);
 	}
 }
 
-void RMDstring(const char *message)
-{
-	unsigned int  i;
-	unsigned char         hashcode[20];
-
-	RIPEMD160(hashcode, (unsigned char *)message);
-	printf("\n* message: %s\n  hashcode: ", message);
-	for (i = 0; i<20; i++)
-		printf("%02x", hashcode[i]);
-	printf("\n");
-}
 #endif  /* RMD160H */

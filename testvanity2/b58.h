@@ -97,22 +97,18 @@ int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz)
 
 static const char b58digits_ordered[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-#define B58_ENC_SIZE 20 * 138 / 100 + 2
-int b58enc(char *b58, const void *data, unsigned int binsz)
+typedef long long ssize_t;
+#define B58_ENC_SIZE 26 * 138 / 100 + 1
+int b58enc(unsigned char *b58, const void *data, unsigned int binsz)
 {
 	const unsigned char *bin = (unsigned char *)data;
-	unsigned char buf[B58_ENC_SIZE];
+	unsigned char buf[B58_ENC_SIZE] = { 0, };
 	int carry;
-	unsigned int i, j, high, zcount = 0;
-	unsigned int size;
+	unsigned int i, j, high, zcount = 0, size;
 
-	while (zcount < binsz && !bin[zcount])
-		++zcount;
+	while (zcount < binsz && !bin[zcount]) ++zcount;
 
 	size = (binsz - zcount) * 138 / 100 + 1;
-
-	memset(buf, 0, size);
-
 	for (i = zcount, high = size - 1; i < binsz; ++i, high = j)
 	{
 		for (carry = bin[i], j = size - 1; (j > high) || carry; --j)
@@ -125,10 +121,8 @@ int b58enc(char *b58, const void *data, unsigned int binsz)
 
 	for (j = 0; j < size && !buf[j]; ++j);
 
-	if (zcount)
-		memset(b58, '1', zcount);
-	for (i = zcount; j < size; ++i, ++j)
-		b58[i] = b58digits_ordered[buf[j]];
+	if (zcount) memset(b58, '1', zcount);
+	for (i = zcount; j < size; ++i, ++j) b58[i] = b58digits_ordered[buf[j]];
 	b58[i] = '\0';
 
 	return 1;
