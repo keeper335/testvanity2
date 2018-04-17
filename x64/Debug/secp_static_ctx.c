@@ -5,13 +5,6 @@
 #define NULL 0
 #endif
 
-#ifndef __constant
-#define __constant
-#endif
-#ifndef __global
-#define __global
-#endif
-
 #ifndef _STDINT
 typedef unsigned char      uint8_t;
 typedef unsigned short     uint16_t;
@@ -58,7 +51,7 @@ void my_memcpy(void* dst, void const* src, size_t size)
 {
 	size_t ret = 0;
 	unsigned char *i_dst = (unsigned char *)dst;
-	for (; ret < size; ret++)
+	for (; ret < size-1; ret++)
 		i_dst[ret] = ((unsigned char *)src)[ret];
 }
 
@@ -66,11 +59,12 @@ void my_memset(void* dst, uint8_t byte, size_t size)
 {
 	size_t ret = 0;
 	int *i_dst = (int *)dst;
-	for (; ret < size; ret++)
+	for (; ret < size-1; ret++)
 		i_dst[ret] = byte;
 }
 
-#ifndef _INC_STRING
+//#ifndef _INC_STRING
+#if 0
 void* __cdecl memcpy(
 	void* _Dst,
 	void const* _Src,
@@ -82,4 +76,7 @@ void* __cdecl memset(
 	int    _Val,
 	size_t _Size
 );
+#else
+#define memset my_memset
+#define memcpy my_memcpy
 #endif

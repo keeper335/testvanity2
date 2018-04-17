@@ -4,6 +4,17 @@
 #define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
 //__constant const secp256k1_ge_storage secp256k1_ge_const_g = SECP256K1_GE_STORAGE_CONST(0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL, 0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL, 0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL, 0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL);
 
+
+void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
+	secp256k1_fe zi2;
+	secp256k1_fe zi3;
+	secp256k1_fe_sqr(&zi2, zi);
+	secp256k1_fe_mul(&zi3, &zi2, zi);
+	secp256k1_fe_mul(&r->x, &a->x, &zi2);
+	secp256k1_fe_mul(&r->y, &a->y, &zi3);
+	r->infinity = a->infinity;
+}
+
 void secp256k1_gej_clear(secp256k1_gej *r) {
 	r->infinity = 0;
 	secp256k1_fe_clear(&r->x);
@@ -172,4 +183,117 @@ void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const secp25
 	secp256k1_fe_cmov(&r->y, &b->y, a->infinity);
 	secp256k1_fe_cmov(&r->z, &fe_1, a->infinity);
 	r->infinity = infinity;
+}
+
+void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr) {
+	secp256k1_fe t1, t2, t3, t4;
+	r->infinity = a->infinity;
+	if (r->infinity) {
+		if (rzr != NULL) {
+			secp256k1_fe_set_int(rzr, 1);
+		}
+		return;
+	}
+
+	if (rzr != NULL) {
+		*rzr = a->y;
+		secp256k1_fe_normalize_weak(rzr);
+		secp256k1_fe_mul_int(rzr, 2);
+	}
+
+	secp256k1_fe_mul(&r->z, &a->z, &a->y);
+	secp256k1_fe_mul_int(&r->z, 2);       /* Z' = 2*Y*Z (2) */
+	secp256k1_fe_sqr(&t1, &a->x);
+	secp256k1_fe_mul_int(&t1, 3);         /* T1 = 3*X^2 (3) */
+	secp256k1_fe_sqr(&t2, &t1);           /* T2 = 9*X^4 (1) */
+	secp256k1_fe_sqr(&t3, &a->y);
+	secp256k1_fe_mul_int(&t3, 2);         /* T3 = 2*Y^2 (2) */
+	secp256k1_fe_sqr(&t4, &t3);
+	secp256k1_fe_mul_int(&t4, 2);         /* T4 = 8*Y^4 (2) */
+	secp256k1_fe_mul(&t3, &t3, &a->x);    /* T3 = 2*X*Y^2 (1) */
+	r->x = t3;
+	secp256k1_fe_mul_int(&r->x, 4);       /* X' = 8*X*Y^2 (4) */
+	secp256k1_fe_negate(&r->x, &r->x, 4); /* X' = -8*X*Y^2 (5) */
+	secp256k1_fe_add(&r->x, &t2);         /* X' = 9*X^4 - 8*X*Y^2 (6) */
+	secp256k1_fe_negate(&t2, &t2, 1);     /* T2 = -9*X^4 (2) */
+	secp256k1_fe_mul_int(&t3, 6);         /* T3 = 12*X*Y^2 (6) */
+	secp256k1_fe_add(&t3, &t2);           /* T3 = 12*X*Y^2 - 9*X^4 (8) */
+	secp256k1_fe_mul(&r->y, &t1, &t3);    /* Y' = 36*X^3*Y^2 - 27*X^6 (1) */
+	secp256k1_fe_negate(&t2, &t4, 2);     /* T2 = -8*Y^4 (3) */
+	secp256k1_fe_add(&r->y, &t2);         /* Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4) */
+}
+
+void secp256k1_gej_add_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_gej *b, secp256k1_fe *rzr) {
+	/* Operations: 12 mul, 4 sqr, 2 normalize, 12 mul_int/add/negate */
+	secp256k1_fe z22, z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
+
+	if (a->infinity) {
+		*r = *b;
+		return;
+	}
+
+	if (b->infinity) {
+		if (rzr != NULL) {
+			secp256k1_fe_set_int(rzr, 1);
+		}
+		*r = *a;
+		return;
+	}
+
+	r->infinity = 0;
+	secp256k1_fe_sqr(&z22, &b->z);
+	secp256k1_fe_sqr(&z12, &a->z);
+	secp256k1_fe_mul(&u1, &a->x, &z22);
+	secp256k1_fe_mul(&u2, &b->x, &z12);
+	secp256k1_fe_mul(&s1, &a->y, &z22); secp256k1_fe_mul(&s1, &s1, &b->z);
+	secp256k1_fe_mul(&s2, &b->y, &z12); secp256k1_fe_mul(&s2, &s2, &a->z);
+	secp256k1_fe_negate(&h, &u1, 1); secp256k1_fe_add(&h, &u2);
+	secp256k1_fe_negate(&i, &s1, 1); secp256k1_fe_add(&i, &s2);
+	if (secp256k1_fe_normalizes_to_zero_var(&h)) {
+		if (secp256k1_fe_normalizes_to_zero_var(&i)) {
+			secp256k1_gej_double_var(r, a, rzr);
+		}
+		else {
+			if (rzr != NULL) {
+				secp256k1_fe_set_int(rzr, 0);
+			}
+			r->infinity = 1;
+		}
+		return;
+	}
+	secp256k1_fe_sqr(&i2, &i);
+	secp256k1_fe_sqr(&h2, &h);
+	secp256k1_fe_mul(&h3, &h, &h2);
+	secp256k1_fe_mul(&h, &h, &b->z);
+	if (rzr != NULL) {
+		*rzr = h;
+	}
+	secp256k1_fe_mul(&r->z, &a->z, &h);
+	secp256k1_fe_mul(&t, &u1, &h2);
+	r->x = t; secp256k1_fe_mul_int(&r->x, 2); secp256k1_fe_add(&r->x, &h3); secp256k1_fe_negate(&r->x, &r->x, 3); secp256k1_fe_add(&r->x, &i2);
+	secp256k1_fe_negate(&r->y, &r->x, 5); secp256k1_fe_add(&r->y, &t); secp256k1_fe_mul(&r->y, &r->y, &i);
+	secp256k1_fe_mul(&h3, &h3, &s1); secp256k1_fe_negate(&h3, &h3, 1);
+	secp256k1_fe_add(&r->y, &h3);
+}
+
+void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge *r, const secp256k1_gej *a) {
+	secp256k1_fe az[1024];
+	secp256k1_fe azi[1024];
+	size_t i;
+	size_t count = 0;
+	for (i = 0; i < len; i++) {
+		if (!a[i].infinity) {
+			az[count++] = a[i].z;
+		}
+	}
+
+	secp256k1_fe_inv_all_var(count, azi, az);
+
+	count = 0;
+	for (i = 0; i < len; i++) {
+		r[i].infinity = a[i].infinity;
+		if (!a[i].infinity) {
+			secp256k1_ge_set_gej_zinv(&r[i], &a[i], &azi[count++]);
+		}
+	}
 }

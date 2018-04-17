@@ -12,16 +12,16 @@ __kernel void hello_kernel(__global uchar* out) {
 	out[4] = 'O';
 	out[5] = '\0';
 
-	secp256k1_ecmult_gen_context sec_ctx;
-	secp256k1_scalar scalar_key = { 0, };
-	uint8_t *p = (uint8_t *)scalar_key.d;
-	secp256k1_gej gej;
-	secp256k1_ge ge;
-	uint8_t *sha_block = (uint8_t *) out;
-	p[0] = 0x34; p[1] = 0x12;
+	//secp256k1_ecmult_gen_context sec_ctx;
+	//secp256k1_scalar scalar_key = { 0, };
+	//uint8_t *p = (uint8_t *)scalar_key.d;
+	//secp256k1_gej gej;
+	//secp256k1_ge ge;
+	//uint8_t *sha_block = (uint8_t *) out;
+	//p[0] = 0x34; p[1] = 0x12;
 }
 
-__kernel void temp_kernel (__global uchar* out) {
+void temp_kernel (__global uchar* out) {
 
 	
 	
