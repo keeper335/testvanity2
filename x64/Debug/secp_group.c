@@ -2,7 +2,7 @@
 
 #define SECP256K1_FE_STORAGE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{ (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
 #define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
-__constant const secp256k1_ge_storage secp256k1_ge_const_g = SECP256K1_GE_STORAGE_CONST(0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL, 0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL, 0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL, 0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL);
+//__constant const secp256k1_ge_storage secp256k1_ge_const_g = SECP256K1_GE_STORAGE_CONST(0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL, 0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL, 0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL, 0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL);
 
 void secp256k1_gej_clear(secp256k1_gej *r) {
 	r->infinity = 0;
@@ -25,7 +25,13 @@ void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a) {
 }
 
 void secp256k1_gej_set_initial(secp256k1_gej *r) {
-	secp256k1_ge_storage a_s = secp256k1_ge_const_g;
+	secp256k1_ge_storage a_s;// = secp256k1_ge_const_g;
+	a_s.x.n[7] = 0x79BE667EUL; a_s.x.n[6] = 0xF9DCBBACUL; a_s.x.n[5] = 0x55A06295UL; a_s.x.n[4] = 0xCE870B07UL;
+	a_s.x.n[3] = 0x029BFCDBUL; a_s.x.n[2] = 0x2DCE28D9UL; a_s.x.n[1] = 0x59F2815BUL; a_s.x.n[0] = 0x16F81798UL;
+
+	a_s.y.n[7] = 0x483ADA77UL; a_s.y.n[6] = 0x26A3C465UL; a_s.y.n[5] = 0x5DA4FBFCUL; a_s.y.n[4] = 0x0E1108A8UL;
+	a_s.y.n[3] = 0xFD17B448UL; a_s.y.n[2] = 0xA6855419UL; a_s.y.n[1] = 0x9C47D08FUL; a_s.y.n[0] = 0xFB10D4B8UL;
+
 	secp256k1_fe_from_storage(&r->x, &a_s.x);
 	secp256k1_fe_from_storage(&r->y, &a_s.y);
 	secp256k1_fe_set_int(&r->z, 1);
@@ -112,7 +118,9 @@ void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, const se
 
 void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b) {
 	/* Operations: 7 mul, 5 sqr, 4 normalize, 21 mul_int/add/negate/cmov */
-	secp256k1_fe fe_1 = {0,0,0,0,0,0,0,0,0,1}; //TODO  0,0,0, ... 1
+	secp256k1_fe fe_1; //TODO  0,0,0, ... 1
+	memset(&fe_1, 0, sizeof(secp256k1_fe));
+	fe_1.n[9] = 1;
 
 	secp256k1_fe zz, u1, u2, s1, s2, t, tt, m, n, q, rr;
 	secp256k1_fe m_alt, rr_alt;
