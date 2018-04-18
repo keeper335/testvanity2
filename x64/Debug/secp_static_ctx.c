@@ -49,17 +49,17 @@ typedef struct {
 
 void my_memcpy(void* dst, void const* src, size_t size)
 {
-	size_t ret = 0;
+	int ret = 0;
 	unsigned char *i_dst = (unsigned char *)dst;
-	for (; ret < size-1; ret++)
-		i_dst[ret] = ((unsigned char *)src)[ret];
+	for (; ret < size; ret++)
+		i_dst[ret] = *((unsigned char *)src + ret);
 }
 
-void my_memset(void* dst, uint8_t byte, size_t size)
+void my_memset(void* dst, int byte, size_t size)
 {
-	size_t ret = 0;
-	int *i_dst = (int *)dst;
-	for (; ret < size-1; ret++)
+	int ret = 0;
+	unsigned char *i_dst = (unsigned char *)dst;
+	for (; ret < size; ret++)
 		i_dst[ret] = byte;
 }
 
