@@ -10,6 +10,7 @@ void secp256k1_ecmult_gen(secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, s
 	secp256k1_ge add;
 	secp256k1_ge_storage adds;
 	secp256k1_scalar gnb;
+
 	int bits;
 	int i, j;
 	memset(&adds, 0, sizeof(adds));
@@ -19,7 +20,7 @@ void secp256k1_ecmult_gen(secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, s
 	add.infinity = 0;
 	for (j = 0; j < 64; j++) {
 		bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
-		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
+		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(ctx->prec[j*16 + i], i == bits);
 		secp256k1_ge_from_storage(&add, &adds);
 		secp256k1_gej_add_ge(r, r, &add);
 	}
@@ -91,6 +92,9 @@ void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
 	//if (ctx->prec != NULL) {
 	//	return;
 	//}
+	//secp256k1_ge_storage *prec[64][16];
+
+
 	secp256k1_ecmult_gen_set_bunch(&(*ctx->prec)[0][0], 983487347u, 1861041900u, 2599115456u, 565528146u, 1451326239u, 148794576u, 4224640328u, 3120843701u, 2076989736u, 3184115747u, 3754320824u, 2656004457u, 2876577688u, 2388659905u, 3527541004u, 1170708298u);
 	secp256k1_ecmult_gen_set_bunch(&(*ctx->prec)[0][1], 3830281845u, 3284871255u, 1309883393u, 2806991612u, 1558611192u, 1249416977u, 1614773327u, 1353445208u, 633124399u, 4264439010u, 426432620u, 167800352u, 2355417627u, 2991792291u, 3042397084u, 505150283u);
 	secp256k1_ecmult_gen_set_bunch(&(*ctx->prec)[0][2], 1792710820u, 2165839471u, 3876070801u, 3603801374u, 2437636273u, 1231643248u, 860890267u, 4002236272u, 3258245037u, 4085545079u, 2695347418u, 288209541u, 484302592u, 139267079u, 14621978u, 2750167787u);
