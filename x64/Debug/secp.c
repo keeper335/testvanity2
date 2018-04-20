@@ -20,7 +20,7 @@ void secp256k1_ecmult_gen(secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, s
 	add.infinity = 0;
 	for (j = 0; j < 64; j++) {
 		bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
-		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(ctx->prec[j*16 + i], i == bits);
+		for (i = 0; i < 16; i++) secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
 		secp256k1_ge_from_storage(&add, &adds);
 		secp256k1_gej_add_ge(r, r, &add);
 	}

@@ -41,7 +41,7 @@ typedef struct {
 } secp256k1_ge_storage;
 
 typedef struct {
-	secp256k1_ge_storage *prec; /* prec[j][i] = 16^j * i * G + U_i */
+	secp256k1_ge_storage (*prec)[64][16]; /* prec[j][i] = 16^j * i * G + U_i */
 	secp256k1_scalar blind;
 	secp256k1_gej initial;
 } secp256k1_ecmult_gen_context;
@@ -53,6 +53,14 @@ void my_memcpy(void* dst, void const* src, size_t size)
 	unsigned char *i_dst = (unsigned char *)dst;
 	for (; ret < size; ret++)
 		i_dst[ret] = *((unsigned char *)src + ret);
+}
+
+void my_memcpy_global(void* dst, __global void * src, size_t size)
+{
+	int ret = 0;
+	unsigned char *i_dst = (unsigned char *)dst;
+	for (; ret < size; ret++)
+		i_dst[ret] = *((__global unsigned char *)src + ret);
 }
 
 void my_memset(void* dst, int byte, size_t size)
