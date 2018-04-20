@@ -58,6 +58,13 @@ void secp256k1_gej_neg(secp256k1_gej *r, const secp256k1_gej *a) {
 	secp256k1_fe_negate(&r->y, &r->y, 1);
 }
 
+void secp256k1_gej_set_gej(secp256k1_gej *r, secp256k1_gej *a) {
+	r->infinity = a->infinity;
+	r->x = a->x;
+	r->y = a->y;
+	r->z = a->z;
+}
+
 void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
 	secp256k1_fe z2, z3;
 	r->infinity = a->infinity;
@@ -296,4 +303,52 @@ void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge *r, const secp256k1_g
 			secp256k1_ge_set_gej_zinv(&r[i], &a[i], &azi[count++]);
 		}
 	}
+}
+
+void my_secp256k1_fe_inv_all_gej_var(secp256k1_fe *r, secp256k1_gej *a) {
+	secp256k1_fe u;
+	int i;
+	r[0] = a[0].z;
+	for (i = 1; i < STEP; i++) secp256k1_fe_mul(&r[i], &r[i - 1], &a[i].z);
+	secp256k1_fe_inv_var(&u, &r[--i]);
+
+	for (; i > 0; i--) {
+		secp256k1_fe_mul(&r[i], &r[i - 1], &u);
+		secp256k1_fe_mul(&u, &u, &a[i].z);
+	}
+
+	r[0] = u;
+}
+
+void my_secp256k1_ge_set_all_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
+	secp256k1_fe azi[STEP];
+	int i;
+
+	my_secp256k1_fe_inv_all_gej_var(azi, a);
+
+	for (i = 0; i < STEP; i++) secp256k1_ge_set_gej_zinv(&r[i], &a[i], &azi[i]);
+}
+
+void my_secp256k1_gej_add_ge_var(secp256k1_gej *r, secp256k1_gej *a, secp256k1_ge *b) {
+	/* 8 mul, 3 sqr, 4 normalize, 12 mul_int/add/negate */
+	secp256k1_fe z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
+
+	secp256k1_fe_sqr(&z12, &a->z);
+	u1 = a->x; secp256k1_fe_normalize_weak(&u1);
+	secp256k1_fe_mul(&u2, &b->x, &z12);
+	s1 = a->y; secp256k1_fe_normalize_weak(&s1);
+	secp256k1_fe_mul(&s2, &b->y, &z12); secp256k1_fe_mul(&s2, &s2, &a->z);
+	secp256k1_fe_negate(&h, &u1, 1); secp256k1_fe_add(&h, &u2);
+	secp256k1_fe_negate(&i, &s1, 1); secp256k1_fe_add(&i, &s2);
+	secp256k1_fe_sqr(&i2, &i);
+	secp256k1_fe_sqr(&h2, &h);
+	secp256k1_fe_mul(&h3, &h, &h2);
+	secp256k1_fe_mul(&r->z, &a->z, &h);
+	secp256k1_fe_mul(&t, &u1, &h2);
+	r->x = t; secp256k1_fe_mul_int(&r->x, 2); secp256k1_fe_add(&r->x, &h3);
+	secp256k1_fe_negate(&r->x, &r->x, 3); secp256k1_fe_add(&r->x, &i2);
+	secp256k1_fe_negate(&r->y, &r->x, 5); secp256k1_fe_add(&r->y, &t);
+	secp256k1_fe_mul(&r->y, &r->y, &i);
+	secp256k1_fe_mul(&h3, &h3, &s1); secp256k1_fe_negate(&h3, &h3, 1);
+	secp256k1_fe_add(&r->y, &h3);
 }

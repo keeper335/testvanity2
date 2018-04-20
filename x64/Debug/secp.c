@@ -1190,4 +1190,3 @@ void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
 	//secp256k1_ecmult_gen_context_build(ctx);
 }
 
-
