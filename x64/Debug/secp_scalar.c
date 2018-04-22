@@ -66,11 +66,11 @@ int secp256k1_scalar_check_overflow(secp256k1_scalar *a) {
 	return yes;
 }
 
-int secp256k1_scalar_is_zero(const secp256k1_scalar *a) {
+int secp256k1_scalar_is_zero(secp256k1_scalar *a) {
 	return (a->d[0] | a->d[1] | a->d[2] | a->d[3] | a->d[4] | a->d[5] | a->d[6] | a->d[7]) == 0;
 }
 
-unsigned int secp256k1_scalar_get_bits(const secp256k1_scalar *a, unsigned int offset, unsigned int count) {
+unsigned int secp256k1_scalar_get_bits(secp256k1_scalar *a, unsigned int offset, unsigned int count) {
 	return (a->d[offset >> 5] >> (offset & 0x1F)) & ((1 << count) - 1);
 }
 
@@ -95,7 +95,7 @@ int secp256k1_scalar_reduce(secp256k1_scalar *r, unsigned int overflow) {
 	return overflow;
 }
 
-int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b) {
+int secp256k1_scalar_add(secp256k1_scalar *r, secp256k1_scalar *a, secp256k1_scalar *b) {
 	int overflow;
 	uint64_t t = (uint64_t)a->d[0] + b->d[0];
 	r->d[0] = t & 0xFFFFFFFFUL; t >>= 32;
@@ -118,7 +118,7 @@ int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, const s
 	return overflow;
 }
 
-void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b32, int *overflow) {
+void secp256k1_scalar_set_b32(secp256k1_scalar *r, unsigned char *b32, int *overflow) {
 	int over;
 	r->d[0] = (uint32_t)b32[31] | (uint32_t)b32[30] << 8 | (uint32_t)b32[29] << 16 | (uint32_t)b32[28] << 24;
 	r->d[1] = (uint32_t)b32[27] | (uint32_t)b32[26] << 8 | (uint32_t)b32[25] << 16 | (uint32_t)b32[24] << 24;
@@ -134,7 +134,7 @@ void secp256k1_scalar_set_b32(secp256k1_scalar *r, const unsigned char *b32, int
 	}
 }
 
-void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar* a) {
+void secp256k1_scalar_get_b32(unsigned char *bin, secp256k1_scalar* a) {
 	bin[0] = a->d[7] >> 24; bin[1] = a->d[7] >> 16; bin[2] = a->d[7] >> 8; bin[3] = a->d[7];
 	bin[4] = a->d[6] >> 24; bin[5] = a->d[6] >> 16; bin[6] = a->d[6] >> 8; bin[7] = a->d[6];
 	bin[8] = a->d[5] >> 24; bin[9] = a->d[5] >> 16; bin[10] = a->d[5] >> 8; bin[11] = a->d[5];
@@ -145,7 +145,7 @@ void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar* a) {
 	bin[28] = a->d[0] >> 24; bin[29] = a->d[0] >> 16; bin[30] = a->d[0] >> 8; bin[31] = a->d[0];
 }
 
-void secp256k1_scalar_negate(secp256k1_scalar *r, const secp256k1_scalar *a) {
+void secp256k1_scalar_negate(secp256k1_scalar *r, secp256k1_scalar *a) {
 	uint32_t nonzero = 0xFFFFFFFFUL * (secp256k1_scalar_is_zero(a) == 0);
 	uint64_t t = (uint64_t)(~a->d[0]) + SECP256K1_N_0 + 1;
 	r->d[0] = t & nonzero; t >>= 32;	t += (uint64_t)(~a->d[1]) + SECP256K1_N_1;

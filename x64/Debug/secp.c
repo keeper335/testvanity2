@@ -2,6 +2,7 @@
 
 #include "secp_static_ctx.c"
 #include "secp_hash.c"
+#include "secp_hash2.c"
 #include "secp_field.c"
 #include "secp_group.c"
 #include "secp_scalar.c"
@@ -12,7 +13,7 @@ void secp256k1_ecmult_gen(secp256k1_ecmult_gen_context *ctx, secp256k1_gej *r, s
 	secp256k1_scalar gnb;
 
 	int bits;
-	int i, j;
+	int i, j; 
 	memset(&adds, 0, sizeof(adds));
 	*r = ctx->initial;
 	/* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */

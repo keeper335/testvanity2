@@ -5,7 +5,7 @@
 #define NULL 0
 #endif
 
-#define STEP 10000
+#define STEP 10
 
 #ifndef _STDINT
 typedef unsigned char      uint8_t;
@@ -16,6 +16,7 @@ typedef long  int64_t;
 typedef int   int32_t;
 typedef short int16_t;
 typedef char  int8_t;
+//typedef unsigned int size_t;
 #endif
 
 typedef struct { uint32_t n[10]; } secp256k1_fe;
@@ -55,14 +56,6 @@ void my_memcpy(void* dst, void const* src, size_t size)
 	unsigned char *i_dst = (unsigned char *)dst;
 	for (; ret < size; ret++)
 		i_dst[ret] = *((unsigned char *)src + ret);
-}
-
-void my_memcpy_global(void* dst, __global void * src, size_t size)
-{
-	int ret = 0;
-	unsigned char *i_dst = (unsigned char *)dst;
-	for (; ret < size; ret++)
-		i_dst[ret] = *((__global unsigned char *)src + ret);
 }
 
 void my_memset(void* dst, int byte, size_t size)

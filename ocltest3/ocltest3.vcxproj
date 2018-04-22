@@ -179,6 +179,9 @@
     <ClInclude Include="..\x64\Debug\secp_static_ctx.c">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_hash2.c">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClCompile Include="ocltest3.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

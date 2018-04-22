@@ -39,6 +39,9 @@
     <ClInclude Include="..\x64\Debug\secp_static_ctx.c">
       <Filter>Файлы ресурсов</Filter>
     </ClInclude>
+    <ClInclude Include="..\x64\Debug\secp_hash2.c">
+      <Filter>Файлы ресурсов</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
