@@ -16,27 +16,24 @@ typedef long  int64_t;
 typedef int   int32_t;
 typedef short int16_t;
 typedef char  int8_t;
-//typedef unsigned int size_t;
 #endif
 
-typedef struct { uint32_t n[10]; } secp256k1_fe;
-typedef struct { uint32_t n[8]; } secp256k1_fe_storage;
+typedef struct { uint32_t n[10]; } secp256k1_fe, secp256k1_fe_t;
+typedef struct { uint32_t n[8]; } secp256k1_fe_storage, secp256k1_fe_storage_t;
 typedef struct { uint32_t d[8]; } secp256k1_scalar;
-//typedef uint64_t uint128_t;
-//typedef int64_t int128_t;
 
 typedef struct {
 	secp256k1_fe x;
 	secp256k1_fe y;
 	int infinity; /* whether this represents the point at infinity */
-} secp256k1_ge;
+} secp256k1_ge, secp256k1_ge_t;
 
 typedef struct {
 	secp256k1_fe x; /* actual X: x/z^2 */
 	secp256k1_fe y; /* actual Y: y/z^3 */
 	secp256k1_fe z;
 	int infinity; /* whether this represents the point at infinity */
-} secp256k1_gej;
+} secp256k1_gej, secp256k1_gej_t;
 
 typedef struct {
 	secp256k1_fe_storage x;
@@ -49,8 +46,7 @@ typedef struct {
 	secp256k1_gej initial;
 } secp256k1_ecmult_gen_context;
 
-
-void my_memcpy(void* dst, void const* src, size_t size)
+void my_memcpy(void* dst, const void * src, size_t size)
 {
 	int ret = 0;
 	unsigned char *i_dst = (unsigned char *)dst;

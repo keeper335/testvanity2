@@ -39,9 +39,6 @@
     <ClInclude Include="..\x64\Debug\secp_static_ctx.c">
       <Filter>Файлы ресурсов</Filter>
     </ClInclude>
-    <ClInclude Include="..\x64\Debug\secp_hash2.c">
-      <Filter>Файлы ресурсов</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -54,6 +51,9 @@
   <ItemGroup>
     <None Include="..\x64\Debug\HelloKernel.cl">
       <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="..\x64\Debug\secp256k1.cl">
+      <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>
 </Project>

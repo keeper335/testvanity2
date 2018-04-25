@@ -2,7 +2,6 @@
 
 #include "secp_static_ctx.c"
 #include "secp_hash.c"
-#include "secp_hash2.c"
 #include "secp_field.c"
 #include "secp_group.c"
 #include "secp_scalar.c"

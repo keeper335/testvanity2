@@ -179,9 +179,6 @@
     <ClInclude Include="..\x64\Debug\secp_static_ctx.c">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClInclude Include="..\x64\Debug\secp_hash2.c">
-      <FileType>CppCode</FileType>
-    </ClInclude>
     <ClCompile Include="ocltest3.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -194,6 +191,7 @@
     <None Include="..\x64\Debug\HelloKernel.cl">
       <FileType>Document</FileType>
     </None>
+    <None Include="..\x64\Debug\secp256k1.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
