@@ -1,9 +1,15 @@
 #include "secp_static_ctx.c"
-//#define SECP256K1_RESTRICT __restrict
-#define SECP256K1_RESTRICT
 
-void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b) {
+#define MAX32 0xffffffff
+#define MAX64 0xffffffffffffffff
+typedef union {
+	uint32_t u32[2];
+	uint64_t u64;
+} u_uint64_t;
+
+void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * b) {
 	uint64_t c, d;
+	//u_uint64_t c, d;
 	uint64_t u0, u1, u2, u3, u4, u5, u6, u7, u8;
 	uint32_t t9, t1, t0, t2, t3, t4, t5, t6, t7;
 	uint32_t M = 0x3FFFFFFUL, R0 = 0x3D10UL, R1 = 0x400UL;
